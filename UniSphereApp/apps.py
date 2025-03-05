@@ -5,4 +5,4 @@ class UniSphereAppConfig(AppConfig):
     name = 'UniSphereApp'
 
 class RangoConfig(AppConfig):
-    name = 'rango'
+    name = 'UniSphereApp'
