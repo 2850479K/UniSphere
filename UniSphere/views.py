@@ -17,6 +17,8 @@ def register(request):
     else:
         form = UserRegistrationForm()
     return render(request, 'register.html', {'form': form})
+##
+##
 
 def user_login(request):
     if request.method == 'POST':
