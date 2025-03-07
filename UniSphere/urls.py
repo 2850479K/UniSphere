@@ -17,11 +17,14 @@ from django.contrib import admin
 from UniSphereApp import views
 from django.urls import path, include
 from django.views.generic import RedirectView
+from django.http import HttpResponse
+
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/', include('UniSphereApp.urls')),
     path('', RedirectView.as_view(url='/UniSphereApp/register/')),
+    path('', include('UniSphereApp.urls')),
 
 ]
