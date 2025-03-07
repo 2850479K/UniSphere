@@ -15,18 +15,9 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-<<<<<<< Updated upstream
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-=======
 from UniSphereApp import views
-
 from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    ,
-    
->>>>>>> Stashed changes
 ]

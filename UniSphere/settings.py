@@ -26,11 +26,6 @@ SECRET_KEY = 'ee&cqz0e58ea7t*f+xkqrfo34nud#60hls!cj&6sr5%d#0dyib'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-<<<<<<< Updated upstream
-=======
-
->>>>>>> Stashed changes
-
 
 # Application definition
 
