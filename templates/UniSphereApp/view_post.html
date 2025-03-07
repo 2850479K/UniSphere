@@ -1,0 +1,34 @@
+<h1>Project Details</h1>
+<p><strong>Created by:</strong> {{ post.user.username }}</p>
+<p><strong>Description:</strong> {{ post.caption }}</p>
+<p><strong>Date Posted:</strong> {{ post.timestamp }}</p>
+
+<h2>Attached Files:</h2>
+{% for file in post.files.all %}
+    <p>
+        {% if file.file.url|lower|slice:'-4:' == ".jpg" or file.file.url|lower|slice:'-4:' == ".png" %}
+            <img src="{{ file.file.url }}" alt="Post Image" width="300">
+        {% elif file.file.url|lower|slice:'-4:' == ".mp4" %}
+            <video width="300" controls>
+                <source src="{{ file.file.url }}" type="video/mp4">
+            </video>
+        {% else %}
+            <a href="{{ file.file.url }}" target="_blank">Download File</a>
+        {% endif %}
+    </p>
+{% endfor %}
+
+<h2>Edit Project</h2>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Update</button>
+</form>
+
+<h2>Delete Post</h2>
+<form method="POST">
+    {% csrf_token %}
+    <button type="submit" name="delete" style="color: red;">Delete Post</button>
+</form>
+
+<a href="{% url 'post_list' %}">Back to Portfolio</a>
