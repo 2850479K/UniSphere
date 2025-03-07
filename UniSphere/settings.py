@@ -26,10 +26,9 @@ SECRET_KEY = 'ee&cqz0e58ea7t*f+xkqrfo34nud#60hls!cj&6sr5%d#0dyib'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-<<<<<<< Updated upstream
-=======
 
->>>>>>> Stashed changes
+AUTH_USER_MODEL = 'UniSphereApp.User'
+
 
 
 # Application definition
@@ -41,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'UniSphereApp',
 ]
 
 MIDDLEWARE = [
@@ -53,12 +53,12 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'UniSphere.urls'
+ROOT_URLCONF = 'UniSphereApp.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

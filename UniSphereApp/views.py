@@ -1,13 +1,10 @@
-<<<<<<< Updated upstream
-from django.shortcuts import render
 
-# Create your views here.
-=======
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import StudentPost, PostFile
 from .forms import StudentPostForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from .forms import UserRegisterForm
 
 #view to display all post/projects
 def post_list(request):
@@ -64,5 +61,19 @@ def view_post(request, project_id):
         else:
             form = StudentPostForm(instance=post)
         return render(request,'UniSphereApp/view_post.html', {'form':form,'post':post})
-    
->>>>>>> Stashed changes
+
+def register(request):
+    if request.method == 'POST':
+        form = UserRegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            user.role = form.cleaned_data['role']
+            user.save()
+            return redirect('login')
+    else:
+        form = UserRegisterForm()
+    return render(request, 'UniSphereApp/register.html', {'form': form})
+
+def home(request):
+    return render(request, 'UniSphereApp/home.html')
+
