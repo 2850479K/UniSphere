@@ -90,7 +90,7 @@ def create_recruiter_profile(request):
             profile = form.save(commit=False)
             profile.user = request.user
             profile.save()
-            return redirect('recruiter_dashboard')
+            return redirect('home')
     else:
         form = RecruiterProfileForm()
     return render(request, 'recruiter/create_profile.html', {'form': form})
