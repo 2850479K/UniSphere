@@ -5,8 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="e5276763-4bbb-4a68-a322-3b873c1447a2" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/post_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/post_list.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UniSphereApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/UniSphereApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/views.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +52,7 @@
     "DefaultHtmlFileTemplate": "HTML File",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
-    "git-widget-placeholder": "trial-merge",
+    "git-widget-placeholder": "debugging-andrea-trial",
     "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
   }
 }]]></component>

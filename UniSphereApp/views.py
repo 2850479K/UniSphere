@@ -29,11 +29,12 @@ def create_post(request):
                 PostFile.objects.create(post=post, file=file)
             messages.success(request, "Project posted successfully.")
             return redirect('post_list')
-        else:
-            form = StudentPostForm()
-        return render(request, 'UniSphereApp/create_post.html', {'form':form})
+    else:
+        form = StudentPostForm()
+    return render(request, 'UniSphereApp/create_post.html', {'form':form})
 
 # view and edit a specific project
+@login_required
 def view_post(request, project_id):
     #get project and return an error if it does not exist
     post = get_object_or_404(StudentPost, id=project_id)
@@ -58,9 +59,9 @@ def view_post(request, project_id):
                 PostFile.objects.create(post=post, file=file)
             messages.success(request, "Post updated successfully.")
             return redirect('view_post', project_id=post.id)
-        else:
-            form = StudentPostForm(instance=post)
-        return render(request,'UniSphereApp/view_post.html', {'form':form,'post':post})
+    else:
+        form = StudentPostForm(instance=post)
+    return render(request,'UniSphereApp/view_post.html', {'form':form,'post':post})
 
 def register(request):
     if request.method == 'POST':

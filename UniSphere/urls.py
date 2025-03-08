@@ -14,14 +14,19 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from UniSphereApp import views
 from django.urls import path, include
 from django.views.generic import RedirectView
+from django.contrib.auth import views as auth_views
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('accounts/', include('UniSphereApp.urls')),
+    #include all app-level URLs from UniSphereApp
+    path('', include('UniSphereApp.urls')),
+    #authentication URLs
+    path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
+    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    #redirect root URL to the registration page
     path('', RedirectView.as_view(url='/UniSphereApp/register/')),
 
 ]
