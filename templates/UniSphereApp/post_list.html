@@ -1,3 +1,11 @@
-<head>
-    
-</head>
+<a href="{% url 'create_post' %}">Add New Project</a>
+{% for post in posts %}
+    <div>
+        <p>
+            <strong>
+                <a href="{% url 'view_post' post.id %}">{{ post.user.username }} - {{ post.caption }}</a>
+            </strong>
+        </p>
+        <p>Posted on: {{ post.timestamp }}</p>
+    </div>
+{% endfor %}
