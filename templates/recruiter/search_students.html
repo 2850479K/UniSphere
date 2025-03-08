@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Students</title>
+</head>
+<body>
+    <h1>Search Students</h1>
+    <form method="GET">
+        {{ form.as_p }}
+        <button type="submit">Search</button>
+    </form>
+
+    <h2>Results:</h2>
+    <ul>
+        {% for student in students %}
+            <li>
+                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" width="50">
+                <strong>{{ student.user.username }}</strong> - {{ student.school }} - {{ student.course }}<br>
+                Interests: {{ student.interests }}<br>
+                Skills: {{ student.skills }}<br>
+                <a href="{% url 'student_profile' student.user.id %}">View Profile</a>
+            </li>
+        {% empty %}
+            <li>No students found.</li>
+        {% endfor %}
+    </ul>
+</body>
+</html>

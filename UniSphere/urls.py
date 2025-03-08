@@ -21,11 +21,13 @@ from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
 from django.views.static import serve
 from django.urls import re_path
+from django.http import HttpResponse
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('UniSphereApp.urls')),
+    path('', RedirectView.as_view(url='/UniSphereApp/register/')),
 
     # Authentication URLs
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),

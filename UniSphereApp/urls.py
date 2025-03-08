@@ -1,6 +1,9 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
+from UniSphereApp import views
+from .views import create_recruiter_profile
+from .views import search_students
 
 urlpatterns = [
     #home page
@@ -15,5 +18,7 @@ urlpatterns = [
     path('portfolio/viewpost/<int:project_id>/', views.view_post, name='view_post'),  # View & edit project
     path('portfolio/editpost/<int:project_id>/', views.edit_post, name='edit_post'),
     path('portfolio/deletepost/<int:project_id>/', views.delete_post, name='delete_post'),
+    path('recruiter/create-profile/', create_recruiter_profile, name='create_recruiter_profile'),
+    path('recruiter/search-students/', search_students, name='search_students'),
 ]
 
