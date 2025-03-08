@@ -63,6 +63,50 @@ def view_post(request, project_id):
         form = StudentPostForm(instance=post)
     return render(request,'UniSphereApp/view_post.html', {'form':form,'post':post})
 
+@login_required
+def edit_post(request, project_id):
+    post = get_object_or_404(StudentPost, id=project_id)
+
+    # Only allow the owner to edit the post
+    if post.user != request.user:
+        messages.error(request, "You are not authorized to edit this post.")
+        return redirect('view_post', project_id=project_id)
+
+    if request.method == 'POST':
+        form = StudentPostForm(request.POST, request.FILES, instance=post)
+        files = request.FILES.getlist('files')
+
+        if form.is_valid():
+            form.save()
+
+            # Add new files
+            for file in files:
+                PostFile.objects.create(post=post, file=file)
+
+            messages.success(request, "Post updated successfully.")
+            return redirect('view_post', project_id=post.id)
+
+    else:
+        form = StudentPostForm(instance=post)
+
+    return render(request, 'UniSphereApp/edit_post.html', {'form': form, 'post': post})
+
+@login_required
+def delete_post(request, project_id):
+    post = get_object_or_404(StudentPost, id=project_id)
+
+    # Only allow the owner to delete the post
+    if post.user != request.user:
+        messages.error(request, "You are not authorized to delete this post.")
+        return redirect('view_post', project_id=project_id)
+
+    if request.method == "POST":
+        post.delete()
+        messages.success(request, "Post successfully deleted.")
+        return redirect('post_list')
+
+    return redirect('view_post', project_id=project_id)
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)

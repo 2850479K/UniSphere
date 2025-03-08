@@ -1,0 +1,30 @@
+<h1>Edit Your Project</h1>
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <p>
+    <label>Project Title:</label>
+    {{ form.title }}
+    </p>
+
+    <p>
+        <label>Description:</label>
+    {{ form.caption }}
+    </p>
+
+    <p>
+        <label>Attach More Files:</label>
+        {{ form.files }}
+    </p>
+
+
+    <button type="submit">Update</button>
+</form>
+
+<!-- Delete Post Button -->
+<form method="POST" action="{% url 'delete_post' post.id %}" onsubmit="return confirm('Are you sure you want to delete this post?');">
+    {% csrf_token %}
+    <button type="submit" style="color: red;">Delete Post</button>
+</form>
+
+<a href="{% url 'view_post' post.id %}">Cancel</a>

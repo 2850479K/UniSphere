@@ -18,17 +18,18 @@ class User(AbstractUser):
 class StudentPost(models.Model):
     #link the post to the user (check with jiacheng and reem for the users)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
     caption = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         #check the slicing to 30
         #displat username + caption in admin
-        return f"{self.user.username} - {self.caption[:30]}"
+        return f"{self.user.username} - {self.title}"
 
 class PostFile(models.Model):
     #link files to the post
-    post = models.ForeignKey(StudentPost, related_name="files", on_delete=models.CASCADE)
+    post = models.ForeignKey('StudentPost', related_name="files", on_delete=models.CASCADE)
     #uploads diles to "upload/" directory
     file = models.FileField(upload_to="uploads/")
 

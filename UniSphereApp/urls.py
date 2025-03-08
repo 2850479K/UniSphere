@@ -13,5 +13,7 @@ urlpatterns = [
     path('portfolio/', views.post_list, name='post_list'),  # View all projects
     path('portfolio/createpost/', views.create_post, name='create_post'),  # Create a new project
     path('portfolio/viewpost/<int:project_id>/', views.view_post, name='view_post'),  # View & edit project
+    path('portfolio/editpost/<int:project_id>/', views.edit_post, name='edit_post'),
+    path('portfolio/deletepost/<int:project_id>/', views.delete_post, name='delete_post'),
 ]
 

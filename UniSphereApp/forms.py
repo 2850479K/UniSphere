@@ -10,7 +10,7 @@ class StudentPostForm(forms.ModelForm):
 
     class Meta:
         model = StudentPost
-        fields = ['caption', 'files']
+        fields = ['title', 'caption', 'files']
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()

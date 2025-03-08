@@ -5,30 +5,18 @@
 
 <h2>Attached Files:</h2>
 {% for file in post.files.all %}
-    <p>
-        {% if file.file.url|lower|slice:'-4:' == ".jpg" or file.file.url|lower|slice:'-4:' == ".png" %}
+    {% if file.file %}
+        <p>
             <img src="{{ file.file.url }}" alt="Post Image" width="300">
-        {% elif file.file.url|lower|slice:'-4:' == ".mp4" %}
-            <video width="300" controls>
-                <source src="{{ file.file.url }}" type="video/mp4">
-            </video>
-        {% else %}
-            <a href="{{ file.file.url }}" target="_blank">Download File</a>
-        {% endif %}
-    </p>
+        </p>
+    {% endif %}
 {% endfor %}
 
-<h2>Edit Project</h2>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Update</button>
-</form>
-
-<h2>Delete Post</h2>
-<form method="POST">
-    {% csrf_token %}
-    <button type="submit" name="delete" style="color: red;">Delete Post</button>
-</form>
+<!-- ✅ Show Edit Button Only If Logged-in User Owns the Post -->
+{% if post.user == request.user %}
+    <a href="{% url 'edit_post' post.id %}">
+        <button>Edit Post</button>
+    </a>
+{% endif %}
 
 <a href="{% url 'post_list' %}">Back to Portfolio</a>
