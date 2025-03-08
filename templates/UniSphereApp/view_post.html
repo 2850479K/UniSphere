@@ -1,4 +1,5 @@
-<h1>Project Details</h1>
+<h1>{{ post.title }}</h1>  <!-- Project title as the main heading -->
+
 <p><strong>Created by:</strong> {{ post.user.username }}</p>
 <p><strong>Description:</strong> {{ post.caption }}</p>
 <p><strong>Date Posted:</strong> {{ post.timestamp }}</p>
@@ -7,16 +8,23 @@
 {% for file in post.files.all %}
     {% if file.file %}
         <p>
-            <img src="{{ file.file.url }}" alt="Post Image" width="300">
+            {% if file.file.url|lower|slice:'-4:' == ".jpg" or file.file.url|lower|slice:'-4:' == ".png" %}
+                <img src="{{ file.file.url }}" alt="Post Image" width="300">
+            {% elif file.file.url|lower|slice:'-4:' == ".mp4" %}
+                <video width="300" controls>
+                    <source src="{{ file.file.url }}" type="video/mp4">
+                </video>
+            {% else %}
+                <a href="{{ file.file.url }}" target="_blank">Download File</a>
+            {% endif %}
         </p>
+    {% else %}
+        <p>No attached files.</p>
     {% endif %}
 {% endfor %}
 
-<!-- ✅ Show Edit Button Only If Logged-in User Owns the Post -->
 {% if post.user == request.user %}
-    <a href="{% url 'edit_post' post.id %}">
-        <button>Edit Post</button>
-    </a>
+    <a href="{% url 'edit_post' post.id %}"><button>Edit Post</button></a>
 {% endif %}
 
 <a href="{% url 'post_list' %}">Back to Portfolio</a>
