@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'UniSphereApp.User'
 
+AUTH_USER_MODEL = 'UniSphereApp.CustomUser' 
+
 
 
 
