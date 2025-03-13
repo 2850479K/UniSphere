@@ -9,7 +9,9 @@ from .forms import RecruiterProfileForm
 from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
-
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from .models import Comment, Like, Share, FriendRequest
 
 #view to display all post/projects
 def post_list(request):
@@ -162,3 +164,66 @@ def search_students(request):
 def profile(request):
     return render(request, 'UniSphereApp/profile.html')
 
+
+
+#views for comment, share, friendrequest, and like
+
+@login_required
+def add_comment(request, post_id):
+    """Add a comment to a post"""
+    post = get_object_or_404(StudentPost, id=post_id)
+    if request.method == "POST":
+        content = request.POST.get("content", "").strip()
+        if content:
+            Comment.objects.create(user=request.user, post=post, content=content)
+    return redirect('view_post', project_id=post.id)
+
+@login_required
+def get_comments(request, post_id):
+    """Return comments for a post in JSON format"""
+    post = get_object_or_404(StudentPost, id=post_id)
+    comments = list(post.comments.values('user__username', 'content', 'created_at'))
+    return JsonResponse({"comments": comments})
+    
+# like and unlike post
+@login_required
+def toggle_like(request, post_id):
+    """Like or Unlike a Post"""
+    post = get_object_or_404(StudentPost, id=post_id)
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+
+    if not created:
+        like.delete()  # If already liked, unlike the post
+        return JsonResponse({"message": "Unliked", "likes": post.likes.count()})
+
+    return JsonResponse({"message": "Liked", "likes": post.likes.count()})
+
+@login_required
+def share_post(request, post_id):
+    """Share a Post"""
+    post = get_object_or_404(StudentPost, id=post_id)
+    Share.objects.create(user=request.user, post=post)
+    return JsonResponse({"message": "Post shared successfully", "shares": post.shares.count()})
+
+@login_required
+def send_friend_request(request, user_id):
+    """Send a friend request to another user"""
+    to_user = get_object_or_404(settings.AUTH_USER_MODEL, id=user_id)
+    if request.user != to_user:
+        FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+    return JsonResponse({"message": "Friend request sent"})
+
+@login_required
+def accept_friend_request(request, request_id):
+    """Accept a friend request"""
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.accepted = True
+    friend_request.save()
+    return JsonResponse({"message": "Friend request accepted"})
+
+@login_required
+def decline_friend_request(request, request_id):
+    """Decline a friend request"""
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.delete()
+    return JsonResponse({"message": "Friend request declined"})
