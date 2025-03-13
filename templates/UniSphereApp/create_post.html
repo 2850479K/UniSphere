@@ -1,24 +1,33 @@
-<h1>Create a New Project</h1>
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
+{% extends 'base.html' %}
 
-    <p>
-    <label>Project Title:</label>
-    {{ form.title }}
-    </p>
+{% block title %}Create Project - UniSphere{% endblock %}
 
-    <p>
-    <label>Description:</label>
-    {{ form.caption }}
-    </p>
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h1 class="mb-3">Create a New Project</h1>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
 
-    <p>
-    <label>Attach More Files:</label>  <!-- ✅ Remove 'for' attribute here -->
-    {{ form.files }}  <!-- ✅ This now works correctly -->
-    </p>
+            <div class="mb-3">
+                <label class="form-label">Project Title:</label>
+                {{ form.title }}
+            </div>
 
+            <div class="mb-3">
+                <label class="form-label">Description:</label>
+                {{ form.caption }}
+            </div>
 
-    <button type="submit">Upload</button>
-</form>
+            <div class="mb-3">
+                <label class="form-label">Attach More Files:</label>
+                {{ form.files }}
+            </div>
 
-<a href="{% url 'post_list' %}">Back to Portfolio</a>
+            <button type="submit" class="btn btn-success">Upload</button>
+        </form>
+
+        <a href="{% url 'post_list' %}" class="btn btn-secondary mt-3">Back to Portfolio</a>
+    </div>
+</div>
+{% endblock %}

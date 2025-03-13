@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
+    <div class="card shadow-lg p-4 text-center" style="width: 100%; max-width: 400px;">
+        <h2 class="mb-4">Your Profile</h2>
+        <p class="lead">This is your profile page.</p>
+        <p>More features coming soon!</p>
+        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Home</a>
+    </div>
+</div>
+{% endblock %}

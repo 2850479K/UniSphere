@@ -4,6 +4,8 @@ from django.contrib.auth import views as auth_views
 from UniSphereApp import views
 from .views import create_recruiter_profile
 from .views import search_students
+from django.contrib.auth.views import LogoutView
+
 
 urlpatterns = [
     #home page
@@ -11,7 +13,7 @@ urlpatterns = [
     #user authentication
     path('register/', views.register, name='register'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LoginView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
+    path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
     #portfolio URLs
     path('portfolio/', views.post_list, name='post_list'),  # View all projects
     path('portfolio/createpost/', views.create_post, name='create_post'),  # Create a new project
@@ -20,5 +22,6 @@ urlpatterns = [
     path('portfolio/deletepost/<int:project_id>/', views.delete_post, name='delete_post'),
     path('recruiter/create-profile/', create_recruiter_profile, name='create_recruiter_profile'),
     path('recruiter/search-students/', search_students, name='search_students'),
+    path('profile/', views.profile, name='profile'),
 ]
 

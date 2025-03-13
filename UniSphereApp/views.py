@@ -117,7 +117,7 @@ def register(request):
         form = UserRegisterForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.role = form.cleaned_data['role']
+            user.role = form.cleaned_data['role']  # Saves the role
             user.save()
             return redirect('login')
     else:
@@ -157,4 +157,8 @@ def search_students(request):
             students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+
+@login_required
+def profile(request):
+    return render(request, 'UniSphereApp/profile.html')
 

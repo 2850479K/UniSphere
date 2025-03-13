@@ -61,8 +61,8 @@ ROOT_URLCONF = 'UniSphereApp.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
-        'APP_DIRS': True,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],  # Make sure this is present
+        'APP_DIRS': True,  # This must be True
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -107,8 +107,8 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'post_list'  # Redirect users to posts after login
-LOGOUT_REDIRECT_URL = 'home'
+LOGIN_REDIRECT_URL = 'home'  # Redirect users to posts after login
+LOGOUT_REDIRECT_URL = None
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.2/topics/i18n/

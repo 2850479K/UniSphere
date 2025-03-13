@@ -1,11 +1,8 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Home</title>
-</head>
-<body>
+{% extends 'base.html' %}
+
+{% block title %}Home - UniSphere{% endblock %}
+
+{% block content %}
     <h1>Welcome to UniSphere</h1>
     <p><a href="{% url 'register' %}">Register</a> | <a href="{% url 'login' %}">Login</a></p>
-</body>
-</html>
+{% endblock %}

@@ -16,7 +16,7 @@ class StudentPostForm(forms.ModelForm):
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
-    role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.RadioSelect)
+    role = role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
 
     class Meta:
         model = User

@@ -22,6 +22,8 @@ from django.contrib.auth import views as auth_views
 from django.views.static import serve
 from django.urls import re_path
 from django.http import HttpResponse
+from django.contrib.auth.views import LogoutView
+
 
 
 urlpatterns = [
@@ -31,7 +33,7 @@ urlpatterns = [
 
     # Authentication URLs
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
-    path('accounts/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    # path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
 
     # Redirect root URL to the registration page
     path('', RedirectView.as_view(url='/register/')),
