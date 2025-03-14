@@ -5,6 +5,8 @@ from UniSphereApp import views
 from .views import create_recruiter_profile
 from .views import search_students
 from django.contrib.auth.views import LogoutView
+from .views import recruiter_dashboard
+from .views import invite_student, save_student
 
 
 urlpatterns = [
@@ -23,5 +25,9 @@ urlpatterns = [
     path('recruiter/create-profile/', create_recruiter_profile, name='create_recruiter_profile'),
     path('recruiter/search-students/', search_students, name='search_students'),
     path('profile/', views.profile, name='profile'),
+    path("recruiter/dashboard/", recruiter_dashboard, name="recruiter_dashboard"),
+    path('recruiter/invite/<int:student_id>/', invite_student, name='invite_student'),
+    path('recruiter/save/<int:student_id>/', save_student, name='save_student'),
 ]
+
 

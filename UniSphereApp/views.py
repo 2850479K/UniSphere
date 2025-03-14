@@ -162,3 +162,38 @@ def search_students(request):
 def profile(request):
     return render(request, 'UniSphereApp/profile.html')
 
+def recruiter_dashboard(request):
+    students = StudentProfile.objects.all()  # 默认展示所有学生
+    form = StudentSearchForm(request.GET)  # 获取搜索表单
+
+    # 处理搜索过滤
+    if form.is_valid():
+        if form.cleaned_data["school"]:
+            students = students.filter(school__icontains=form.cleaned_data["school"])
+        if form.cleaned_data["course"]:
+            students = students.filter(course__icontains=form.cleaned_data["course"])
+        if form.cleaned_data["skills"]:
+            students = students.filter(skills__icontains=form.cleaned_data["skills"])
+
+    return render(request, "recruiter/dashboard.html", {"form": form, "students": students})
+
+
+@login_required
+def invite_student(request, student_id):
+    student = get_object_or_404(StudentProfile, id=student_id)
+
+    existing_invite = Invitation.objects.filter(recruiter=request.user, student=student).first()
+    if existing_invite:
+        return JsonResponse({'message': 'Invitation already sent'}, status=400)
+
+    Invitation.objects.create(recruiter=request.user, student=student)
+    return JsonResponse({'message': 'Invitation sent successfully'})
+
+
+@login_required
+def save_student(request, student_id):
+    student = get_object_or_404(StudentProfile, id=student_id)
+
+    request.user.recruiterprofile.favorite_students.add(student)
+
+    return JsonResponse({'message': 'Student saved successfully'})

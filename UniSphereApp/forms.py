@@ -26,6 +26,9 @@ class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile
         fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+        widgets = {
+            'company_description': forms.Textarea(attrs={'rows': 4}),
+        }
 
 class StudentSearchForm(forms.Form):
     name = forms.CharField(required=False, label="Student Name")
