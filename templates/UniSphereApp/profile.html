@@ -8,7 +8,6 @@
         <h2 class="mb-4">Your Profile</h2>
         <p class="lead">Welcome to your profile page.</p>
 
-        <!-- Projects Section -->
         <h3 class="mt-4">Your Recent Projects</h3>
         {% if projects %}
             <div class="row mt-3">
@@ -17,16 +16,16 @@
                         <div class="card shadow-sm p-3">
                             <h5>{{ project.title }}</h5>
                             <p>{{ project.description|truncatechars:100 }}</p>
-                            <a href="{% url 'project_detail' project.id %}" class="btn btn-outline-primary btn-sm">View Project</a>
+                            <a href="{% url 'project' project.id %}" class="btn btn-outline-primary btn-sm">View Project</a>
                         </div>
                     </div>
                 {% endfor %}
             </div>
-            <!-- View More button linking to the full portfolio page -->
+
             <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-primary mt-3">View More Projects</a>
         {% else %}
             <p class="text-muted">No projects yet.
-                <a href="{% url 'create_project' %}" class="btn btn-outline-success btn-sm">Create One</a>
+                <a href="{% url 'create_project' %}" class="btn btn-success">Create One</a>
                 <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-outline-info btn-sm">View All Projects</a>
             </p>
         {% endif %}

@@ -13,8 +13,8 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
 
     # Portfolio & Projects
-    path('portfolio/<str:username>/', views.user_portfolio, name='user_portfolio'),
     path('portfolio/create_project/', views.create_project, name='create_project'),
+    path('portfolio/<str:username>/', views.user_portfolio, name='user_portfolio'),
     path('project/<int:project_id>/', views.project, name='project'),
     path('project/<int:project_id>/edit/', views.edit_project, name='edit_project'),
     path('project/<int:project_id>/delete/', views.delete_project, name='delete_project'),

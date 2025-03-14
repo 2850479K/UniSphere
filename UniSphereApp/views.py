@@ -30,8 +30,14 @@ def profile(request):
 
 # Portfolio & Projects
 def user_portfolio(request, username):
-    profile_user = get_object_or_404(User, username=username)
+    try:
+        profile_user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        messages.error(request, "User not found.")
+        return redirect('home')
+
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
+
     return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
 
 def project(request, project_id):
@@ -45,12 +51,16 @@ def create_project(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             project = form.save(commit=False)
-            project.user = request.user
+            project.user = request.user 
             project.save()
             messages.success(request, "Project created successfully!")
-            return redirect('project', project_id=project.id)
+
+            
+            return redirect('project', project_id=project.id)  
+
     else:
         form = ProjectForm()
+
     return render(request, 'UniSphereApp/create_project.html', {'form': form})
 
 @login_required
