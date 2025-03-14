@@ -30,10 +30,10 @@
         {% endfor %}
 
         {% if post.user == request.user %}
-            <a href="{% url 'edit_post' post.id %}" class="btn btn-warning">Edit Post</a>
+            <a href="{% url 'UniSphereApp:edit_post' post.id %}" class="btn btn-warning">Edit Post</a>
         {% endif %}
 
-        <a href="{% url 'post_list' %}" class="btn btn-secondary mt-3">Back to Portfolio</a>
+        <a href="{% url 'UniSphereApp:post_list' %}" class="btn btn-secondary mt-3">Back to Portfolio</a>
     </div>
 </div>
 {% endblock %}

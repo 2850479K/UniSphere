@@ -2,24 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ user_profile.username }}'s Profile</title>
+    <title>{{ user_profile.user.username }}'s Profile</title>
 </head>
 <body>
-    <h1>{{ user_profile.username }}'s Profile</h1>
-
+    <h1>{{ user_profile.user.username }}'s Profile</h1>
     {% if user_profile.profile_picture %}
         <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" width="200">
     {% endif %}
-    <p>Role: {{ user_profile.get_role_display }}</p>
     <p>School: {{ user_profile.school }}</p>
     <p>Course: {{ user_profile.course }}</p>
     <p>Interests: {{ user_profile.interests }}</p>
-
-    {% if request.user == user_profile %}
+    {% if request.user == user_profile.user %}
         <a href="{% url 'UniSphereApp:edit_profile' %}">Edit Profile</a>
     {% endif %}
-
-    <a href="{% url 'home' %}">Back to Home</a>
+    <a href="{% url 'UniSphereApp:home' %}">Back to Home</a>
 </body>
 </html>

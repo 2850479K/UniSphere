@@ -1,22 +1,19 @@
 from django import forms
-from .models import StudentPost, User
 from django.contrib.auth.forms import UserCreationForm
-from .models import RecruiterProfile
-from .models import StudentProfile
+from .models import StudentPost, User, RecruiterProfile, StudentProfile
 
-#create form for a new post
 class StudentPostForm(forms.ModelForm):
     files = forms.FileField(
-        #allow for mulitple uploads
-        widget=forms.FileInput(), required=False)
-
+        widget=forms.FileInput(),
+        required=False
+    )
     class Meta:
         model = StudentPost
         fields = ['title', 'caption', 'files']
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
-    role = role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
+    role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
 
     class Meta:
         model = User
@@ -30,7 +27,7 @@ class RecruiterProfileForm(forms.ModelForm):
 class ProfileEdiForm(forms.ModelForm):
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'school', 'course', 'interests', 'profile_picture']
+        fields = ['is_public', 'first_name', 'last_name', 'school', 'course', 'interests', 'profile_picture']
 
 class StudentSearchForm(forms.Form):
     name = forms.CharField(required=False, label="Student Name")

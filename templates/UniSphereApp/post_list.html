@@ -6,14 +6,14 @@
 <div class="container mt-4">
     <div class="d-flex justify-content-between mb-3">
         <h1>Your Portfolio</h1>
-        <a href="{% url 'create_post' %}" class="btn btn-success">Add New Project</a>
+        <a href="{% url 'UniSphereApp:create_post' %}" class="btn btn-success">Add New Project</a>
     </div>
 
     {% for post in posts %}
         <div class="card mb-3 p-3 shadow-sm">
             <p>
                 <strong>
-                    <a href="{% url 'view_post' post.id %}" class="text-primary">{{ post.user.username }} - {{ post.caption }}</a>
+                    <a href="{% url 'UniSphereApp:view_post' post.id %}" class="text-primary">{{ post.user.username }} - {{ post.caption }}</a>
                 </strong>
             </p>
             <p>Posted on: {{ post.timestamp }}</p>

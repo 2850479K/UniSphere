@@ -1,7 +1,6 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Edit Profile</title>
 </head>
 <body>
@@ -11,5 +10,6 @@
         {{ form.as_p }}
         <button type="submit">Save</button>
     </form>
+    <p><a href="{% url 'UniSphereApp:profile' %}">Cancel</a></p>
 </body>
 </html>
