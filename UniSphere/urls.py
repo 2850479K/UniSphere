@@ -29,14 +29,10 @@ from django.contrib.auth.views import LogoutView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('UniSphereApp.urls')),
-    path('', RedirectView.as_view(url='/UniSphereApp/register/')),
-
     # Authentication URLs
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
     # path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
 
-    # Redirect root URL to the registration page
-    path('', RedirectView.as_view(url='/register/')),
 
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

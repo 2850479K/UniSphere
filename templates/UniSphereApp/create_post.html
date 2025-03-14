@@ -1,33 +1,34 @@
 {% extends 'base.html' %}
 
-{% block title %}Create Project - UniSphere{% endblock %}
+{% block title %}Create Post - UniSphere{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
     <div class="card shadow p-4">
-        <h1 class="mb-3">Create a New Project</h1>
+        <h1 class="mb-3">Create a New Post for "{{ project.title }}"</h1>
         <form method="POST" enctype="multipart/form-data">
             {% csrf_token %}
 
             <div class="mb-3">
-                <label class="form-label">Project Title:</label>
+                <label class="form-label">Post Title:</label>
                 {{ form.title }}
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Description:</label>
+                <label class="form-label">Caption:</label>
                 {{ form.caption }}
             </div>
 
             <div class="mb-3">
-                <label class="form-label">Attach More Files:</label>
+                <label class="form-label">Attach Files:</label>
                 {{ form.files }}
             </div>
 
             <button type="submit" class="btn btn-success">Upload</button>
         </form>
 
-        <a href="{% url 'post_list' %}" class="btn btn-secondary mt-3">Back to Portfolio</a>
+
+        <a href="{% url 'project' project.id %}" class="btn btn-secondary mt-3">Back to Project</a>
     </div>
 </div>
 {% endblock %}

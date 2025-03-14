@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Project - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h1 class="mb-3">Edit Project</h1>
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Project Title:</label>
+                {{ form.title }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Description:</label>
+                {{ form.description }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+
+        <a href="{% url 'project' project.id %}" class="btn btn-secondary mt-3">Cancel</a>
+    </div>
+</div>
+{% endblock %}

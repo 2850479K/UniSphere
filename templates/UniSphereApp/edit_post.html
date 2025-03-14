@@ -1,0 +1,48 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Post - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow p-4">
+        <h1 class="mb-3">Edit Your Post</h1>
+        <form method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label">Title:</label>
+                {{ form.title }}
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Caption:</label>
+                {{ form.caption }}
+            </div>
+
+
+            {% if existing_files %}
+                <h5>Attached Files:</h5>
+                <ul>
+                    {% for file in existing_files %}
+                        <li>
+                            <a href="{{ file.file.url }}" download>{{ file.file.name }}</a>
+                            <input type="checkbox" name="delete_files" value="{{ file.id }}">
+                            <label>Delete</label>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+
+
+            <div class="mb-3">
+                <label class="form-label">Attach More Files:</label>
+                {{ form.files }}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Update</button>
+        </form>
+
+        <a href="{% url 'project' post.project.id %}" class="btn btn-secondary mt-3">Cancel</a>
+    </div>
+</div>
+{% endblock %}

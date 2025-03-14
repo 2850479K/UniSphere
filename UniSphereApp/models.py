@@ -1,10 +1,8 @@
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth import get_user_model
 from django.db import models
 from django.conf import settings
+from django.contrib.auth.models import AbstractUser
 
-
-# Create your models here.
+# User Model
 
 class User(AbstractUser):
     STUDENT = 'student'
@@ -17,6 +15,9 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+# Projects & Posts
+
 class Project(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
@@ -39,6 +40,8 @@ class StudentPost(models.Model):
 class PostFile(models.Model):
     post = models.ForeignKey(StudentPost, related_name="files", on_delete=models.CASCADE)
     file = models.FileField(upload_to="uploads/")
+
+# Recruiter & Student Profiles
 
 class RecruiterProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
