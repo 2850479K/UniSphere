@@ -26,20 +26,34 @@ def register(request):
     return render(request, 'UniSphereApp/register.html', {'form': form})
 
 @login_required
-def profile(request):
-    profile, created = StudentProfile.objects.get_or_create(user=request.user)
-    projects = Project.objects.filter(user=request.user).order_by("-timestamp")[:5]  # Show recent 5 projects
+def profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    profile, created = StudentProfile.objects.get_or_create(user=profile_user)
+    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
 
-    if request.method == "POST":
+    is_owner = request.user == profile_user  # ✅ Ensure only the owner can edit
+
+    if request.method == "POST" and is_owner:
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
+            if form.cleaned_data.get("delete_picture"):  
+                profile.delete_profile_picture()  # ✅ Delete profile picture if requested
             form.save()
             messages.success(request, "Profile updated successfully!")
-            return redirect('profile')  
+            return redirect('profile', username=profile_user.username)
     else:
         form = StudentProfileForm(instance=profile)
 
-    return render(request, "UniSphereApp/profile.html", {"form": form, "profile": profile, "projects": projects})
+    return render(
+        request, 
+        "UniSphereApp/profile.html", 
+        {"form": form, "profile": profile, "projects": projects, "profile_user": profile_user, "is_owner": is_owner}
+    )
+
+@login_required
+def my_profile(request):
+    """Redirects the user to their own profile page."""
+    return redirect('profile', username=request.user.username)
 
 # Portfolio & Projects
 

@@ -8,7 +8,8 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
-    path('profile/', views.profile, name='profile'),
+    path('profile/<str:username>/', views.profile, name='profile'),
+    path('profile/', views.my_profile, name='my_profile'),
 
     # Portfolio & Projects
     path('portfolio/create_project/', views.create_project, name='create_project'),

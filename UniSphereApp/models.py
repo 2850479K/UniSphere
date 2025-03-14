@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+import os
 
 # User Model
 class User(AbstractUser):
@@ -51,14 +52,27 @@ class RecruiterProfile(models.Model):
     def __str__(self):
         return self.company_name
 
+def profile_picture_upload_path(instance, filename):
+    return f"profile_pictures/{instance.user.username}/{filename}"
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    profile_picture = models.ImageField(upload_to="profile_pics/", blank=True, null=True)
     full_name = models.CharField(max_length=255, blank=True, null=True)
-    gender = models.CharField(max_length=10, choices=[("male", "Male"), ("female", "Female"), ("other", "Other")], blank=True, null=True)
-    languages = models.CharField(max_length=255, blank=True, null=True)
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
+    languages = models.TextField(blank=True, null=True)
+    profile_picture = models.ImageField(upload_to=profile_picture_upload_path, blank=True, null=True)
 
-    def __str__(self):
-        return self.user.username
+    def get_profile_picture_url(self):
+        """Returns user profile picture if exists, otherwise default profile picture."""
+        if self.profile_picture:
+            return self.profile_picture.url
+        return "/static/images/default_pfp.jpeg"  # ✅ Default profile picture
 
+    def delete_profile_picture(self):
+        """Deletes the user's profile picture from storage."""
+        if self.profile_picture:
+            if os.path.isfile(self.profile_picture.path):
+                os.remove(self.profile_picture.path)
+            self.profile_picture = None
+            self.save()
 

@@ -1,89 +1,108 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Profile - UniSphere{% endblock %}
+{% block title %}{{ profile_user.username }}'s Profile - UniSphere{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg p-4 text-center">
-        <h2 class="mb-4">Your Profile</h2>
-        <p class="lead">Welcome to your profile page.</p>
+        <h2 class="mb-4">{{ profile_user.username }}'s Profile</h2>
+        <p class="lead">Welcome to {{ profile_user.username }}'s profile page.</p>
 
         <div class="card mx-auto p-4" style="max-width: 500px; background-color: #f5f5f5;">
             <div class="text-center">
-                <!-- Profile Picture -->
-                {% if profile.profile_picture %}
-                    <img src="{{ profile.profile_picture.url }}" class="rounded-circle mb-3"
-                        style="width: 100px; height: 100px; object-fit: cover;" alt="Profile Picture">
-                {% else %}
-                    <img src="/static/images/default-profile.png" class="rounded-circle mb-3"
-                        style="width: 100px; height: 100px; object-fit: cover;" alt="Default Profile Picture">
-                {% endif %}
+                <!-- ✅ Profile Picture Display -->
+                <img src="{{ profile.get_profile_picture_url }}" class="rounded-circle mb-3"
+                     style="width: 100px; height: 100px; object-fit: cover;" alt="Profile Picture">
 
-                <!-- Edit Button -->
-                <button class="btn btn-primary" id="edit-btn">Edit</button>
+                <!-- ✅ Show Edit Button Only for Profile Owner -->
+                {% if is_owner %}
+                    <button class="btn btn-primary" id="edit-btn">Edit</button>
+                {% endif %}
             </div>
 
-            <!-- Profile Form -->
-            <form id="profile-form" action="" method="POST" enctype="multipart/form-data" class="mt-3" style="display: none;">
-                {% csrf_token %}
+            <!-- ✅ Profile Details Form (Only for Profile Owner) -->
+            {% if is_owner %}
+                <form id="profile-form" method="POST" enctype="multipart/form-data" class="mt-3" style="display: none;">
+                    {% csrf_token %}
 
-                <label>Profile Picture</label>
-                <input type="file" name="profile_picture" class="form-control mb-2">
+                    <label>Profile Picture</label>
+                    <input type="file" name="profile_picture" class="form-control mb-2">
 
-                <label>Full Name</label>
-                <input type="text" name="full_name" value="{{ profile.full_name|default_if_none:'' }}" class="form-control mb-2">
+                    <!-- ✅ Delete Profile Picture Checkbox -->
+                    {% if profile.profile_picture %}
+                        <div class="form-check">
+                            <input type="checkbox" name="delete_picture" class="form-check-input">
+                            <label class="form-check-label">Delete current picture</label>
+                        </div>
+                    {% endif %}
 
-                <label>Gender</label>
-                <select name="gender" class="form-control mb-2">
-                    <option value="" {% if not profile.gender %}selected{% endif %}>Select Gender</option>
-                    <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
-                    <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
-                    <option value="other" {% if profile.gender == 'other' %}selected{% endif %}>Other</option>
-                </select>
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" value="{{ profile.full_name }}" class="form-control mb-2">
 
-                <label>Languages</label>
-                <input type="text" name="languages" value="{{ profile.languages|default_if_none:'' }}" class="form-control mb-3">
+                    <label>Gender</label>
+                    <select name="gender" class="form-control mb-2">
+                        <option value="" {% if not profile.gender %}selected{% endif %}>Select Gender</option>
+                        <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
+                        <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
+                        <option value="other" {% if profile.gender == 'other' %}selected{% endif %}>Other</option>
+                    </select>
 
-                <button type="submit" class="btn btn-success">Save Changes</button>
-                <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-            </form>
+                    <label>Languages</label>
+                    <input type="text" name="languages" value="{{ profile.languages }}" class="form-control mb-3">
 
+                    <button type="submit" class="btn btn-success">Save Changes</button>
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                </form>
+            {% endif %}
+
+            <!-- ✅ Display Profile Details -->
             <p><strong>Full Name:</strong> {{ profile.full_name|default:"Not set" }}</p>
             <p><strong>Gender:</strong> {{ profile.gender|default:"Not set" }}</p>
             <p><strong>Languages:</strong> {{ profile.languages|default:"Not set" }}</p>
         </div>
 
-        <h3 class="mt-4">Your Recent Projects</h3>
+        <!-- ✅ User's Projects -->
+        <h3 class="mt-4">Projects by {{ profile_user.username }}</h3>
         {% if projects %}
             <div class="row mt-3">
                 {% for project in projects %}
                     <div class="col-md-4 mb-3">
                         <div class="card shadow-sm p-3">
-                            <h5><strong>{{ project.title }}</strong></h5>
+                            <h5>{{ project.title }}</h5>
                             <p>{{ project.description|truncatechars:100 }}</p>
                             <a href="{% url 'project' project.id %}" class="btn btn-outline-primary btn-sm">View Project</a>
                         </div>
                     </div>
                 {% endfor %}
             </div>
-            <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-primary mt-3">View More Projects</a>
+            <a href="{% url 'user_portfolio' profile_user.username %}" class="btn btn-primary mt-3">View More Projects</a>
         {% else %}
-            <p class="text-muted">No projects yet.
-                <a href="{% url 'create_project' %}" class="btn btn-success">Create One</a>
-            </p>
+            <p class="text-muted">No projects yet.</p>
         {% endif %}
     </div>
 </div>
 
 <script>
-    document.getElementById("edit-btn").addEventListener("click", function() {
-        document.getElementById("profile-form").style.display = "block";
-        this.style.display = "none";
-    });
+    document.addEventListener("DOMContentLoaded", function () {
+        let editBtn = document.getElementById("edit-btn");
+        let profileForm = document.getElementById("profile-form");
+        let cancelBtn = document.getElementById("cancel-btn");
 
-    document.getElementById("cancel-btn").addEventListener("click", function() {
-        document.getElementById("profile-form").style.display = "none";
-        document.getElementById("edit-btn").style.display = "inline-block";
+        if (editBtn) {
+            editBtn.addEventListener("click", function () {
+                profileForm.style.display = "block";
+                editBtn.style.display = "none";
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener("click", function () {
+                profileForm.style.display = "none";
+                editBtn.style.display = "inline-block";
+            });
+        }
     });
 </script>
+
 {% endblock %}
