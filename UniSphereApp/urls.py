@@ -5,8 +5,6 @@ from . import views
 
 urlpatterns = [
     path('', views.home, name='home'),
-
-    # Authentication
     path('register/', views.register, name='register'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),

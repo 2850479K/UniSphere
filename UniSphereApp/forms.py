@@ -1,12 +1,11 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StudentPost, Project, RecruiterProfile
+from .models import StudentPost, Project, RecruiterProfile, StudentProfile
 
 User = get_user_model()
 
 # User & Authentication Forms
-
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
     role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
@@ -15,8 +14,20 @@ class UserRegisterForm(UserCreationForm):
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'role']
 
-# Project & Post Forms
+# Profile Form
 
+class StudentProfileForm(forms.ModelForm):
+    class Meta:
+        model = StudentProfile
+        fields = ["profile_picture", "full_name", "gender", "languages"]
+        widgets = {
+            "gender": forms.Select(choices=[
+                ("male", "Male"),
+                ("female", "Female"),
+                ("other", "Other"),
+            ]),
+        }
+# Project & Post Forms
 class ProjectForm(forms.ModelForm):
     class Meta:
         model = Project
@@ -31,8 +42,7 @@ class StudentPostForm(forms.ModelForm):
         model = StudentPost
         fields = ['title', 'caption', 'files']
 
-# Recruiter & Student Search Forms
-
+# Recruiter Profile & Student Search Forms
 class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile

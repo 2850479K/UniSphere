@@ -4,11 +4,12 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm
 
 User = get_user_model()
 
 # Authentication
+
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
@@ -26,18 +27,25 @@ def register(request):
 
 @login_required
 def profile(request):
-    return render(request, 'UniSphereApp/profile.html')
+    profile, created = StudentProfile.objects.get_or_create(user=request.user)
+    projects = Project.objects.filter(user=request.user).order_by("-timestamp")[:5]  # Show recent 5 projects
+
+    if request.method == "POST":
+        form = StudentProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('profile')  
+    else:
+        form = StudentProfileForm(instance=profile)
+
+    return render(request, "UniSphereApp/profile.html", {"form": form, "profile": profile, "projects": projects})
 
 # Portfolio & Projects
+
 def user_portfolio(request, username):
-    try:
-        profile_user = User.objects.get(username=username)
-    except User.DoesNotExist:
-        messages.error(request, "User not found.")
-        return redirect('home')
-
+    profile_user = get_object_or_404(User, username=username)
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
-
     return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
 
 def project(request, project_id):
@@ -51,12 +59,10 @@ def create_project(request):
         form = ProjectForm(request.POST)
         if form.is_valid():
             project = form.save(commit=False)
-            project.user = request.user 
+            project.user = request.user
             project.save()
             messages.success(request, "Project created successfully!")
-
-            
-            return redirect('project', project_id=project.id)  
+            return redirect('project', project_id=project.id)
 
     else:
         form = ProjectForm()
@@ -98,6 +104,7 @@ def delete_project(request, project_id):
     return redirect('project', project_id=project.id)
 
 # Posts
+
 @login_required
 def create_post(request, project_id):
     project = get_object_or_404(Project, id=project_id)
@@ -174,6 +181,7 @@ def delete_post(request, post_id):
     return redirect('project', project_id=post.project.id)
 
 # Recruiter Profile & Student Search
+
 @login_required
 def create_recruiter_profile(request):
     if request.method == 'POST':
