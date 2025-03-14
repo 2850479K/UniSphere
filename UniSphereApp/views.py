@@ -9,7 +9,6 @@ from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProf
 User = get_user_model()
 
 # Authentication
-
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
@@ -30,7 +29,6 @@ def profile(request):
     return render(request, 'UniSphereApp/profile.html')
 
 # Portfolio & Projects
-
 def user_portfolio(request, username):
     profile_user = get_object_or_404(User, username=username)
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
@@ -90,7 +88,6 @@ def delete_project(request, project_id):
     return redirect('project', project_id=project.id)
 
 # Posts
-
 @login_required
 def create_post(request, project_id):
     project = get_object_or_404(Project, id=project_id)
@@ -115,6 +112,11 @@ def create_post(request, project_id):
         form = StudentPostForm()
 
     return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
+
+@login_required
+def view_post(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
 @login_required
 def edit_post(request, post_id):
@@ -162,7 +164,6 @@ def delete_post(request, post_id):
     return redirect('project', project_id=post.project.id)
 
 # Recruiter Profile & Student Search
-
 @login_required
 def create_recruiter_profile(request):
     if request.method == 'POST':
@@ -193,4 +194,3 @@ def search_students(request):
             students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
-
