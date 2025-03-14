@@ -13,7 +13,7 @@ from .forms import StudentSearchForm
 from .models import Project
 from django.contrib.auth import get_user_model
 
-User = get_user_model() 
+User = get_user_model()
 
 def user_portfolio(request, username):
     User = get_user_model()
@@ -61,7 +61,7 @@ def create_post(request, project_id):
             return redirect('project_detail', project_id=project.id)
     else:
         form = StudentPostForm()
-    
+
     return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
 # view and edit a specific project
 @login_required
@@ -72,13 +72,13 @@ def view_post(request, project_id):
     if post.user != request.user:
         messages.error(request, "You are not authorised to edit this post.")
         return redirect('post_list')
-    
+
     if request.method == 'POST':
         if 'delete' in request.POST:
             post.delete()
             messages.success(request, "Post successfully deleted")
             return redirect('post_list')
-        
+
         form = StudentPostForm(request.POST, request.FILES, instance=post)
         files = request.FILES.getlist('files')
 
@@ -213,3 +213,9 @@ def project_detail(request, project_id):
 def profile(request):
     return render(request, 'UniSphereApp/profile.html')
 
+
+
+@login_required
+def profile_view(request):
+    projects = Project.objects.filter(user=request.user).order_by('-timestamp')[:3]  # Show latest 3 projects
+    return render(request, 'UniSphereApp/profile.html', {'projects': projects})
