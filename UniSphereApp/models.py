@@ -17,23 +17,27 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+class Project(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.title}"
 
 class StudentPost(models.Model):
-    #link the post to the user (check with jiacheng and reem for the users)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="posts")
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     caption = models.TextField()
     timestamp = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        #check the slicing to 30
-        #displat username + caption in admin
         return f"{self.user.username} - {self.title}"
 
 class PostFile(models.Model):
-    #link files to the post
-    post = models.ForeignKey('StudentPost', related_name="files", on_delete=models.CASCADE)
-    #uploads diles to "upload/" directory
+    post = models.ForeignKey(StudentPost, related_name="files", on_delete=models.CASCADE)
     file = models.FileField(upload_to="uploads/")
 
 class RecruiterProfile(models.Model):

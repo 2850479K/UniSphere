@@ -1,18 +1,22 @@
 from django import forms
-from .models import StudentPost, User
+from .models import StudentPost, User, Project
 from django.contrib.auth.forms import UserCreationForm
 from .models import RecruiterProfile
 from .models import StudentProfile
 
-#create form for a new post
 class StudentPostForm(forms.ModelForm):
     files = forms.FileField(
-        #allow for mulitple uploads
-        widget=forms.ClearableFileInput(attrs={'multiple':True}), required=False)
+        widget=forms.ClearableFileInput(attrs={'multiple': True}), required=False
+    )  # ✅ FIXED: Indentation error removed
 
     class Meta:
         model = StudentPost
-        fields = ['title', 'caption', 'files']
+        fields = ['title', 'caption', 'files', 'project']  # ✅ Ensure project selection is included
+
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['title', 'description']
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()

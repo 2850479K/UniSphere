@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ profile_user.username }}'s Portfolio{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>{{ profile_user.username }}'s Projects</h1>
+
+    {% if user == profile_user %}
+        <a href="{% url 'create_project' %}" class="btn btn-success mb-3">Add Project</a>
+    {% endif %}
+
+    <div class="list-group">
+        {% for project in projects %}
+            <a href="{% url 'project_detail' project.id %}" class="list-group-item">
+                <h5>{{ project.title }}</h5>
+                <p>{{ project.description }}</p>
+            </a>
+        {% empty %}
+            <p>No projects available.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

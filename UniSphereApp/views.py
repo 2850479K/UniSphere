@@ -9,35 +9,56 @@ from .forms import RecruiterProfileForm
 from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
+from .models import Project
 
 
-#view to display all post/projects
-def post_list(request):
-    posts = StudentPost.objects.all().order_by('-timestamp')
-    return render(request, 'UniSphereApp/post_list.html', {'posts': posts})
+def user_portfolio(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
+    return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
 
-#view for creating a new post/project
 @login_required
-def create_post(request):
+def create_project(request):
+    if request.method == 'POST':
+        form = ProjectForm(request.POST)
+        if form.is_valid():
+            project = form.save(commit=False)
+            project.user = request.user
+            project.save()
+            messages.success(request, "Project created successfully.")
+            return redirect('user_portfolio', username=request.user.username)
+    else:
+        form = ProjectForm()
+    return render(request, 'UniSphereApp/create_project.html', {'form': form})
+
+def project_detail(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    posts = StudentPost.objects.filter(project=project).order_by('-timestamp')
+    return render(request, 'UniSphereApp/projects.html', {'project': project, 'posts': posts})
+
+@login_required
+def create_post(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES)
-        #get list of uploaded files
         files = request.FILES.getlist('files')
 
         if form.is_valid():
             post = form.save(commit=False)
-            #assign the current user to the post
             post.user = request.user
+            post.project = project  # Assign project
             post.save()
 
             for file in files:
                 PostFile.objects.create(post=post, file=file)
-            messages.success(request, "Project posted successfully.")
-            return redirect('post_list')
+
+            messages.success(request, "Post added successfully.")
+            return redirect('project_detail', project_id=project.id)
     else:
         form = StudentPostForm()
-    return render(request, 'UniSphereApp/create_post.html', {'form':form})
-
+    
+    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
 # view and edit a specific project
 @login_required
 def view_post(request, project_id):
@@ -112,6 +133,25 @@ def delete_post(request, project_id):
 
     return redirect('view_post', project_id=project_id)
 
+def user_portfolio(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
+
+    return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
+
+@login_required
+def create_project(request):
+    if request.method == 'POST':
+        title = request.POST.get('title')
+        description = request.POST.get('description')
+
+        if title and description:
+            Project.objects.create(user=request.user, title=title, description=description)
+            messages.success(request, "Project created successfully.")
+            return redirect('user_portfolio', username=request.user.username)
+
+    return render(request, 'UniSphereApp/create_project.html')
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
@@ -157,6 +197,12 @@ def search_students(request):
             students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+
+def project_detail(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+    posts = StudentPost.objects.filter(project=project).order_by('-timestamp')
+
+    return render(request, 'UniSphereApp/projects.html', {'project': project, 'posts': posts})
 
 @login_required
 def profile(request):
