@@ -14,33 +14,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.conf import settings
+from django.urls import path, include
 from django.conf.urls.static import static
 from django.contrib import admin
-from django.urls import path, include
-from django.views.generic import RedirectView
-from django.contrib.auth import views as auth_views
-from django.views.static import serve
-from django.urls import re_path
-from django.http import HttpResponse
-from django.contrib.auth.views import LogoutView
-
 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('UniSphereApp.urls')),
-    path('', RedirectView.as_view(url='/UniSphereApp/register/')),
-
-    # Authentication URLs
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
-    # path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
-
-    # Redirect root URL to the registration page
-    path('', RedirectView.as_view(url='/register/')),
-
-    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

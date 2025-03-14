@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import StudentPost, PostFile
+from .models import StudentPost, PostFile, StudentProfile, User
 from .forms import StudentPostForm
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,11 +7,19 @@ from .forms import UserRegisterForm
 from .models import RecruiterProfile
 from .forms import RecruiterProfileForm
 from django.db.models import Q
-from .models import StudentProfile
 from .forms import StudentSearchForm
+from .forms import ProfileEdiForm
+from django.contrib.auth.views import LogoutView
+from django.contrib.auth import logout
+
+
 
 
 #view to display all post/projects
+
+def home(request):
+    return render(request, 'UniSphereApp/home.html', {'user': request.user})
+
 def post_list(request):
     posts = StudentPost.objects.all().order_by('-timestamp')
     return render(request, 'UniSphereApp/post_list.html', {'posts': posts})
@@ -158,7 +166,34 @@ def search_students(request):
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
 
+
 @login_required
 def profile(request):
-    return render(request, 'UniSphereApp/profile.html')
+    try:
+        if request.user.role == 'student':
+            user_profile = get_object_or_404(StudentProfile, user=request.user)
+        else:
+            user_profile = get_object_or_404(RecruiterProfile, user=request.user)
+        return render(request, 'UniSphereApp/profile.html', {'user_profile': user_profile})
+    except:
+        return render(request, 'UniSphereApp/private_profile.html')
 
+@login_required
+def edit_profile(request):
+    if request.method == 'POST':
+        form = ProfileEdiForm(request.POST, request.FILES, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('/profile/')
+        else:
+            form = ProfileEdiForm(instance=request.user)
+        return render(request, 'UniSphereApp/edit_profile.html', {'form': form})
+
+class MyLogoutView(LogoutView):
+    def get(self, request, *args, **kwargs):
+        return super().post(request, *args, **kwargs)
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return render(request, 'UniSphereApp/logout.html')

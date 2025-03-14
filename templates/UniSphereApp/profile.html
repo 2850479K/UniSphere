@@ -1,14 +1,25 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user_profile.username }}'s Profile</title>
+</head>
+<body>
+    <h1>{{ user_profile.username }}'s Profile</h1>
 
-{% block title %}Profile - UniSphere{% endblock %}
+    {% if user_profile.profile_picture %}
+        <img src="{{ user_profile.profile_picture.url }}" alt="Profile Picture" width="200">
+    {% endif %}
+    <p>Role: {{ user_profile.get_role_display }}</p>
+    <p>School: {{ user_profile.school }}</p>
+    <p>Course: {{ user_profile.course }}</p>
+    <p>Interests: {{ user_profile.interests }}</p>
 
-{% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
-    <div class="card shadow-lg p-4 text-center" style="width: 100%; max-width: 400px;">
-        <h2 class="mb-4">Your Profile</h2>
-        <p class="lead">This is your profile page.</p>
-        <p>More features coming soon!</p>
-        <a href="{% url 'home' %}" class="btn btn-primary mt-3">Back to Home</a>
-    </div>
-</div>
-{% endblock %}
+    {% if request.user == user_profile %}
+        <a href="{% url 'UniSphereApp:edit_profile' %}">Edit Profile</a>
+    {% endif %}
+
+    <a href="{% url 'home' %}">Back to Home</a>
+</body>
+</html>

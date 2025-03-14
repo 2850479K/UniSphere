@@ -4,16 +4,24 @@ from django.db import models
 from django.conf import settings
 
 
+
 # Create your models here.
 
 class User(AbstractUser):
     STUDENT = 'student'
     RECRUITER = 'recruiter'
+    SOCIETY = 'society'
     ROLE_CHOICES = [
         (STUDENT, 'Student'),
         (RECRUITER, 'Recruiter'),
+        (SOCIETY, 'Society'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=STUDENT)
+
+    school = models.CharField(max_length=100, blank=True)
+    course = models.CharField(max_length=100, blank=True)
+    interests = models.TextField(blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pics/', blank=True)
 
     def __str__(self):
         return self.username

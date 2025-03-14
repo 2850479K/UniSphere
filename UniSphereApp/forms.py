@@ -8,7 +8,7 @@ from .models import StudentProfile
 class StudentPostForm(forms.ModelForm):
     files = forms.FileField(
         #allow for mulitple uploads
-        widget=forms.ClearableFileInput(attrs={'multiple':True}), required=False)
+        widget=forms.FileInput(), required=False)
 
     class Meta:
         model = StudentPost
@@ -26,6 +26,11 @@ class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile
         fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+
+class ProfileEdiForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'school', 'course', 'interests', 'profile_picture']
 
 class StudentSearchForm(forms.Form):
     name = forms.CharField(required=False, label="Student Name")
