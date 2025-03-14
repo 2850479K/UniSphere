@@ -14,6 +14,7 @@ urlpatterns = [
     path('register/', views.register, name='register'),
     path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
+    path('profile/', views.profile, name='profile'),
     #portfolio URLs
     path('portfolio/<str:username>/', views.user_portfolio, name='user_portfolio'),
     path('portfolio/create_project/', views.create_project, name='create_project'),

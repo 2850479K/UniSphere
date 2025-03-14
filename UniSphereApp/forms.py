@@ -3,6 +3,9 @@ from .models import StudentPost, User, Project
 from django.contrib.auth.forms import UserCreationForm
 from .models import RecruiterProfile
 from .models import StudentProfile
+from django.contrib.auth import get_user_model  
+
+User = get_user_model() 
 
 class StudentPostForm(forms.ModelForm):
     files = forms.FileField(
@@ -23,7 +26,7 @@ class UserRegisterForm(UserCreationForm):
     role = role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
 
     class Meta:
-        model = User
+        model = get_user_model()
         fields = ['username', 'email', 'password1', 'password2', 'role']
 
 class RecruiterProfileForm(forms.ModelForm):

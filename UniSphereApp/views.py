@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import StudentPost, PostFile
 from .forms import StudentPostForm
@@ -10,9 +11,12 @@ from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
 from .models import Project
+from django.contrib.auth import get_user_model
 
+User = get_user_model() 
 
 def user_portfolio(request, username):
+    User = get_user_model()
     profile_user = get_object_or_404(User, username=username)
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
     return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
@@ -134,6 +138,7 @@ def delete_post(request, project_id):
     return redirect('view_post', project_id=project_id)
 
 def user_portfolio(request, username):
+    User = get_user_model()
     profile_user = get_object_or_404(User, username=username)
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
 

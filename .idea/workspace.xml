@@ -5,15 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="478826dd-d355-4456-8e32-fe07cdd67ec8" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/forms.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/migrations/0001_initial.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/migrations/0001_initial.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/edit_post.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/post_list.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/post_list.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -34,12 +26,12 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "more-portfolio-features"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;more-portfolio-features&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

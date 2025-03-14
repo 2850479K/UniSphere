@@ -1,5 +1,5 @@
 from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.db import models
 from django.conf import settings
 
@@ -41,7 +41,7 @@ class PostFile(models.Model):
     file = models.FileField(upload_to="uploads/")
 
 class RecruiterProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     company_name = models.CharField(max_length=255)
     industry = models.CharField(max_length=100)
     company_description = models.TextField(blank=True, null=True)
@@ -52,7 +52,7 @@ class RecruiterProfile(models.Model):
         return self.company_name
 
 class StudentProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     school = models.CharField(max_length=255)
     course = models.CharField(max_length=255)
     interests = models.TextField()
