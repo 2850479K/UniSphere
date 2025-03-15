@@ -15,13 +15,12 @@ class UserRegisterForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2', 'role']
 
 # Profile Form
-
 class StudentProfileForm(forms.ModelForm):
-    delete_picture = forms.BooleanField(required=False, label="Delete Profile Picture")
+    delete_picture = forms.BooleanField(required=False, label="Delete profile picture")
 
     class Meta:
         model = StudentProfile
-        fields = ['profile_picture', 'full_name', 'gender', 'languages']
+        fields = ["profile_picture", "full_name", "gender", "languages", "visibility"]
         
 # Project & Post Forms
 class ProjectForm(forms.ModelForm):

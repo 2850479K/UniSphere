@@ -29,15 +29,19 @@ def register(request):
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, created = StudentProfile.objects.get_or_create(user=profile_user)
-    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
+    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5] 
 
-    is_owner = request.user == profile_user  # ✅ Ensure only the owner can edit
+    is_owner = request.user == profile_user  
+
+   
+    if profile.visibility == "private" and not is_owner:
+        return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
     if request.method == "POST" and is_owner:
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            if form.cleaned_data.get("delete_picture"):  
-                profile.delete_profile_picture()  # ✅ Delete profile picture if requested
+            if request.POST.get("delete_picture"):  
+                profile.delete_profile_picture()  
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=profile_user.username)
@@ -47,7 +51,13 @@ def profile(request, username):
     return render(
         request, 
         "UniSphereApp/profile.html", 
-        {"form": form, "profile": profile, "projects": projects, "profile_user": profile_user, "is_owner": is_owner}
+        {
+            "form": form, 
+            "profile": profile, 
+            "projects": projects,  
+            "profile_user": profile_user, 
+            "is_owner": is_owner
+        }
     )
 
 @login_required
@@ -56,7 +66,6 @@ def my_profile(request):
     return redirect('profile', username=request.user.username)
 
 # Portfolio & Projects
-
 def user_portfolio(request, username):
     profile_user = get_object_or_404(User, username=username)
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')

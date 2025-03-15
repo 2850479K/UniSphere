@@ -1,69 +1,57 @@
 {% extends 'base.html' %}
-{% load static %}
 
-{% block title %}{{ profile_user.username }}'s Profile - UniSphere{% endblock %}
+{% block title %}Profile - UniSphere{% endblock %}
 
 {% block content %}
 <div class="container mt-5">
     <div class="card shadow-lg p-4 text-center">
         <h2 class="mb-4">{{ profile_user.username }}'s Profile</h2>
-        <p class="lead">Welcome to {{ profile_user.username }}'s profile page.</p>
 
         <div class="card mx-auto p-4" style="max-width: 500px; background-color: #f5f5f5;">
             <div class="text-center">
-                <!-- ✅ Profile Picture Display -->
                 <img src="{{ profile.get_profile_picture_url }}" class="rounded-circle mb-3"
                      style="width: 100px; height: 100px; object-fit: cover;" alt="Profile Picture">
 
-                <!-- ✅ Show Edit Button Only for Profile Owner -->
                 {% if is_owner %}
                     <button class="btn btn-primary" id="edit-btn">Edit</button>
                 {% endif %}
             </div>
 
-            <!-- ✅ Profile Details Form (Only for Profile Owner) -->
-            {% if is_owner %}
-                <form id="profile-form" method="POST" enctype="multipart/form-data" class="mt-3" style="display: none;">
-                    {% csrf_token %}
+            <form id="profile-form" method="POST" enctype="multipart/form-data" class="mt-3" style="display: none;">
+                {% csrf_token %}
+                <label>Profile Picture</label>
+                <input type="file" name="profile_picture" class="form-control mb-2">
 
-                    <label>Profile Picture</label>
-                    <input type="file" name="profile_picture" class="form-control mb-2">
+                <label>Full Name</label>
+                <input type="text" name="full_name" value="{{ profile.full_name }}" class="form-control mb-2">
 
-                    <!-- ✅ Delete Profile Picture Checkbox -->
-                    {% if profile.profile_picture %}
-                        <div class="form-check">
-                            <input type="checkbox" name="delete_picture" class="form-check-input">
-                            <label class="form-check-label">Delete current picture</label>
-                        </div>
-                    {% endif %}
+                <label>Gender</label>
+                <select name="gender" class="form-control mb-2">
+                    <option value="" {% if not profile.gender %}selected{% endif %}>Select Gender</option>
+                    <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
+                    <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
+                    <option value="other" {% if profile.gender == 'other' %}selected{% endif %}>Other</option>
+                </select>
 
-                    <label>Full Name</label>
-                    <input type="text" name="full_name" value="{{ profile.full_name }}" class="form-control mb-2">
+                <label>Languages</label>
+                <input type="text" name="languages" value="{{ profile.languages }}" class="form-control mb-3">
 
-                    <label>Gender</label>
-                    <select name="gender" class="form-control mb-2">
-                        <option value="" {% if not profile.gender %}selected{% endif %}>Select Gender</option>
-                        <option value="male" {% if profile.gender == 'male' %}selected{% endif %}>Male</option>
-                        <option value="female" {% if profile.gender == 'female' %}selected{% endif %}>Female</option>
-                        <option value="other" {% if profile.gender == 'other' %}selected{% endif %}>Other</option>
-                    </select>
+                <label>Profile Visibility</label>
+                <select name="visibility" class="form-control mb-2">
+                    <option value="public" {% if profile.visibility == "public" %}selected{% endif %}>Public</option>
+                    <option value="private" {% if profile.visibility == "private" %}selected{% endif %}>Private</option>
+                </select>
 
-                    <label>Languages</label>
-                    <input type="text" name="languages" value="{{ profile.languages }}" class="form-control mb-3">
+                <button type="submit" class="btn btn-success">Save Changes</button>
+                <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+            </form>
 
-                    <button type="submit" class="btn btn-success">Save Changes</button>
-                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
-                </form>
-            {% endif %}
-
-            <!-- ✅ Display Profile Details -->
             <p><strong>Full Name:</strong> {{ profile.full_name|default:"Not set" }}</p>
             <p><strong>Gender:</strong> {{ profile.gender|default:"Not set" }}</p>
             <p><strong>Languages:</strong> {{ profile.languages|default:"Not set" }}</p>
         </div>
 
-        <!-- ✅ User's Projects -->
-        <h3 class="mt-4">Projects by {{ profile_user.username }}</h3>
+        <h3 class="mt-4">Your Recent Projects</h3>
         {% if projects %}
             <div class="row mt-3">
                 {% for project in projects %}
@@ -76,32 +64,24 @@
                     </div>
                 {% endfor %}
             </div>
-            <a href="{% url 'user_portfolio' profile_user.username %}" class="btn btn-primary mt-3">View More Projects</a>
+            <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-primary mt-3">View More Projects</a>
         {% else %}
-            <p class="text-muted">No projects yet.</p>
+            <p class="text-muted">No projects yet.
+                <a href="{% url 'create_project' %}" class="btn btn-success">Create One</a>
+            </p>
         {% endif %}
     </div>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        let editBtn = document.getElementById("edit-btn");
-        let profileForm = document.getElementById("profile-form");
-        let cancelBtn = document.getElementById("cancel-btn");
+    document.getElementById("edit-btn").addEventListener("click", function() {
+        document.getElementById("profile-form").style.display = "block";
+        this.style.display = "none";
+    });
 
-        if (editBtn) {
-            editBtn.addEventListener("click", function () {
-                profileForm.style.display = "block";
-                editBtn.style.display = "none";
-            });
-        }
-
-        if (cancelBtn) {
-            cancelBtn.addEventListener("click", function () {
-                profileForm.style.display = "none";
-                editBtn.style.display = "inline-block";
-            });
-        }
+    document.getElementById("cancel-btn").addEventListener("click", function() {
+        document.getElementById("profile-form").style.display = "none";
+        document.getElementById("edit-btn").style.display = "inline-block";
     });
 </script>
 

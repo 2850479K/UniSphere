@@ -56,23 +56,28 @@ def profile_picture_upload_path(instance, filename):
     return f"profile_pictures/{instance.user.username}/{filename}"
 
 class StudentProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    full_name = models.CharField(max_length=255, blank=True, null=True)
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
-    languages = models.TextField(blank=True, null=True)
-    profile_picture = models.ImageField(upload_to=profile_picture_upload_path, blank=True, null=True)
+    VISIBILITY_CHOICES = [
+        ('public', 'Public'),
+        ('private', 'Private'),
+    ]
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
+    full_name = models.CharField(max_length=100, blank=True)
+    gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')])
+    languages = models.CharField(max_length=255, blank=True)
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')  
 
     def get_profile_picture_url(self):
-        """Returns user profile picture if exists, otherwise default profile picture."""
         if self.profile_picture:
             return self.profile_picture.url
-        return "/static/images/default_pfp.jpeg"  # ✅ Default profile picture
+        return "/static/images/default_pfp.jpeg"
 
     def delete_profile_picture(self):
-        """Deletes the user's profile picture from storage."""
-        if self.profile_picture:
-            if os.path.isfile(self.profile_picture.path):
-                os.remove(self.profile_picture.path)
-            self.profile_picture = None
-            self.save()
+        if self.profile_picture and os.path.isfile(self.profile_picture.path):
+            os.remove(self.profile_picture.path)
+        self.profile_picture = None
+        self.save()
 
+    def __str__(self):
+        return self.user.username
