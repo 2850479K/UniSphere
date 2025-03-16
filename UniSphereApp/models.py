@@ -1,7 +1,10 @@
+from email.policy import default
+
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
+from setuptools.command.easy_install import auto_chmod
 
 
 # Create your models here.

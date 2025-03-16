@@ -1,101 +1,105 @@
 {% extends "base.html" %}
 
-{% block content %}
-<div class="container mt-5">
-    <div class="card shadow-lg p-4 mx-auto" style="max-width: 700px;">
-        <h2 class="text-center mb-4">Recruiter Dashboard</h2>
+ {% block content %}
+ <div class="container mt-5">
+     <div class="card shadow-lg p-4 mx-auto" style="max-width: 700px;">
+         <h2 class="text-center mb-4">Recruiter Dashboard</h2>
 
-        <!-- Search Form -->
-        <form method="GET" class="mb-4">
-            <div class="form-group mb-3">
-                <label for="student_name">Student Name:</label>
-                <input type="text" id="student_name" name="student_name" class="form-control" placeholder="Enter student name">
-            </div>
-            <div class="form-group mb-3">
-                <label for="school">School:</label>
-                <input type="text" id="school" name="school" class="form-control" placeholder="Enter school">
-            </div>
-            <div class="form-group mb-3">
-                <label for="course">Course:</label>
-                <input type="text" id="course" name="course" class="form-control" placeholder="Enter course">
-            </div>
-            <div class="form-group mb-3">
-                <label for="interests">Interests:</label>
-                <input type="text" id="interests" name="interests" class="form-control" placeholder="Enter interests">
-            </div>
-            <div class="form-group mb-3">
-                <label for="skills">Skills:</label>
-                <input type="text" id="skills" name="skills" class="form-control" placeholder="Enter skills">
-            </div>
-            <div class="text-center">
-                <button type="submit" class="btn btn-primary">Search</button>
-            </div>
-        </form>
+         <form method="GET" class="mb-4">
+             <div class="form-group mb-3">
+                 <label for="student_name">Student Name:</label>
+                 <input type="text" id="student_name" name="student_name" class="form-control" placeholder="Enter student name">
+             </div>
+             <div class="form-group mb-3">
+                 <label for="school">School:</label>
+                 <input type="text" id="school" name="school" class="form-control" placeholder="Enter school">
+             </div>
+             <div class="form-group mb-3">
+                 <label for="course">Course:</label>
+                 <input type="text" id="course" name="course" class="form-control" placeholder="Enter course">
+             </div>
+             <div class="form-group mb-3">
+                 <label for="interests">Interests:</label>
+                 <input type="text" id="interests" name="interests" class="form-control" placeholder="Enter interests">
+             </div>
+             <div class="form-group mb-3">
+                 <label for="skills">Skills:</label>
+                 <input type="text" id="skills" name="skills" class="form-control" placeholder="Enter skills">
+             </div>
+             <div class="text-center">
+                 <button type="submit" class="btn btn-primary">Search</button>
+             </div>
+         </form>
+         
+         <h4 class="mt-4">Search Results:</h4>
+         <div class="table-responsive">
+             <table class="table table-bordered text-center">
+                 <thead class="table-light">
+                     <tr>
+                         <th>Profile Picture</th>
+                         <th>Name</th>
+                         <th>School</th>
+                         <th>Course</th>
+                         <th>Skills</th>
+                         <th>Actions</th>
+                     </tr>
+                 </thead>
+                 <tbody>
+                     {% if students %}
+                         {% for student in students %}
+                         <tr>
+                             <td>
+                                 {% if student.profile_picture %}
+                                    <img src="{{ student.profile_picture.url }}" alt="Profile Picture"
+                                         width="50" height="50" class="rounded-circle">
+                                {% else %}
+                                    <img src="/static/default_profile.png" alt="Default Profile"
+                                         width="50" height="50" class="rounded-circle">
+                                {% endif %}
+                             </td>
+                             <td>{{ student.user.username }}</td>
+                             <td>{{ student.school }}</td>
+                             <td>{{ student.course }}</td>
+                             <td>{{ student.skills }}</td>
+                             <td>
+                                 <button class="invite-btn btn btn-sm btn-primary" data-student-id="{{ student.id }}">Invite</button>
+                                 <button class="save-btn btn btn-sm btn-success" data-student-id="{{ student.id }}">Save</button>
+                             </td>
+                         </tr>
+                         {% endfor %}
+                     {% else %}
+                         <tr>
+                             <td colspan="6">No students found.</td>
+                         </tr>
+                     {% endif %}
+                 </tbody>
+             </table>
+         </div>
+     </div>
+ </div>
 
-        <!-- Search Results -->
-        <h4 class="mt-4">Search Results:</h4>
-        <div class="table-responsive">
-            <table class="table table-bordered text-center">
-                <thead class="table-light">
-                    <tr>
-                        <th>Profile Picture</th>
-                        <th>Name</th>
-                        <th>School</th>
-                        <th>Course</th>
-                        <th>Skills</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% if students %}
-                        {% for student in students %}
-                        <tr>
-                            <td>
-                                <img src="{{ student.profile_picture.url }}" alt="Profile Picture" width="50" height="50" class="rounded-circle">
-                            </td>
-                            <td>{{ student.user.username }}</td>
-                            <td>{{ student.school }}</td>
-                            <td>{{ student.course }}</td>
-                            <td>{{ student.skills }}</td>
-                            <td>
-                                <button class="invite-btn btn btn-sm btn-primary" data-student-id="{{ student.id }}">Invite</button>
-                                <button class="save-btn btn btn-sm btn-success" data-student-id="{{ student.id }}">Save</button>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    {% else %}
-                        <tr>
-                            <td colspan="6">No students found.</td>
-                        </tr>
-                    {% endif %}
-                </tbody>
-            </table>
-        </div>
-    </div>
-</div>
 
-<!-- JavaScript for AJAX -->
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        document.querySelectorAll('.invite-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                let studentId = this.getAttribute('data-student-id');
-                fetch(`/recruiter/invite/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
-                    .then(response => response.json())
-                    .then(data => alert(data.message))
-                    .catch(error => console.error('Error:', error));
-            });
-        });
+ <script>
+     document.addEventListener("DOMContentLoaded", function () {
+         document.querySelectorAll('.invite-btn').forEach(button => {
+             button.addEventListener('click', function () {
+                 let studentId = this.getAttribute('data-student-id');
+                 fetch(`/recruiter/invite/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
+                     .then(response => response.json())
+                     .then(data => alert(data.message))
+                     .catch(error => console.error('Error:', error));
+             });
+         });
 
-        document.querySelectorAll('.save-btn').forEach(button => {
-            button.addEventListener('click', function () {
-                let studentId = this.getAttribute('data-student-id');
-                fetch(`/recruiter/save/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
-                    .then(response => response.json())
-                    .then(data => alert(data.message))
-                    .catch(error => console.error('Error:', error));
-            });
-        });
-    });
-</script>
-{% endblock %}
+         document.querySelectorAll('.save-btn').forEach(button => {
+             button.addEventListener('click', function () {
+                 let studentId = this.getAttribute('data-student-id');
+                 fetch(`/recruiter/save/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
+                     .then(response => response.json())
+                     .then(data => alert(data.message))
+                     .catch(error => console.error('Error:', error));
+             });
+         });
+     });
+ </script>
+ {% endblock %}

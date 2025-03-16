@@ -9,6 +9,9 @@ from .forms import RecruiterProfileForm
 from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
+from .models import Invitation, StudentProfile
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
 
 
 #view to display all post/projects
@@ -162,11 +165,11 @@ def search_students(request):
 def profile(request):
     return render(request, 'UniSphereApp/profile.html')
 
+@login_required
 def recruiter_dashboard(request):
-    students = StudentProfile.objects.all()  # 默认展示所有学生
-    form = StudentSearchForm(request.GET)  # 获取搜索表单
+    students = StudentProfile.objects.all()
+    form = StudentSearchForm(request.GET)
 
-    # 处理搜索过滤
     if form.is_valid():
         if form.cleaned_data["school"]:
             students = students.filter(school__icontains=form.cleaned_data["school"])
@@ -197,3 +200,4 @@ def save_student(request, student_id):
     request.user.recruiterprofile.favorite_students.add(student)
 
     return JsonResponse({'message': 'Student saved successfully'})
+
