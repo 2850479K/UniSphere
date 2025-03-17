@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Shared Posts - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Shared Posts</h1>
+
+    {% for shared_post in shared_posts %}
+        <div class="card mb-3 p-3 shadow-sm">
+            <p><strong>Shared by: {{ shared_post.user.username }}</strong></p>
+            <p>Original Post by: {{ shared_post.original_post.user.username }}</p>
+            <p>
+                <a href="{% url 'view_post' shared_post.original_post.id %}" class="text-primary">
+                    {{ shared_post.original_post.title }}
+                </a>
+            </p>
+            <p>Caption: {{ shared_post.original_post.caption }}</p>
+            <p>Shared on: {{ shared_post.timestamp }}</p>
+
+           
+            <a href="{% url 'toggle_like' shared_post.id %}" class="btn btn-outline-primary">Like</a>
+            <a href="{% url 'get_comments' shared_post.id %}" class="btn btn-outline-secondary">Comments</a>
+            <a href="{% url 'share_post' shared_post.original_post.id %}" class="btn btn-outline-success">Share</a>
+        </div>
+    {% empty %}
+        <p>No shared posts yet.</p>
+    {% endfor %}
+</div>
+{% endblock %}

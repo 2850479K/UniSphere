@@ -7,7 +7,7 @@ from .forms import UserRegisterForm
 from .models import RecruiterProfile
 from .forms import RecruiterProfileForm
 from django.db.models import Q
-from .models import StudentProfile
+from .models import StudentProfile, SharedPost 
 from .forms import StudentSearchForm
 from django.http import JsonResponse
 from .models import Comment, Like, Share, FriendRequest
@@ -197,12 +197,18 @@ def toggle_like(request, post_id):
 
     return JsonResponse({"message": "Liked", "likes": post.likes.count()})
 
-@login_required
 def share_post(request, post_id):
-    """Share a Post"""
-    post = get_object_or_404(StudentPost, id=post_id)
-    Share.objects.create(user=request.user, post=post)
-    return JsonResponse({"message": "Post shared successfully", "shares": post.shares.count()})
+    original_post = get_object_or_404(StudentPost, id=post_id)
+
+    # Prevent users from sharing the same post multiple times
+    if SharedPost.objects.filter(user=request.user, original_post=original_post).exists():
+        messages.warning(request, "You have already shared this post.")
+        return redirect('post_list')
+
+    # Create the shared post
+    SharedPost.objects.create(user=request.user, original_post=original_post)
+    messages.success(request, "Post shared successfully!")
+    return redirect('post_list')
 
 @login_required
 def send_friend_request(request, user_id):
@@ -226,3 +232,8 @@ def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
     return JsonResponse({"message": "Friend request declined"})
+
+def shared_posts_list(request):
+    """View shared posts"""
+    shared_posts = SharedPost.objects.all().order_by('-timestamp')
+    return render(request, 'UniSphereApp/shared_posts_list.html', {'shared_posts': shared_posts})

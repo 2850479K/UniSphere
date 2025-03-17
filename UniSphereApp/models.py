@@ -96,6 +96,14 @@ class FriendRequest(models.Model):
         return f"Friend Request from {self.from_user.username} to {self.to_user.username}"
 
 
+class SharedPost(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  
+    original_post = models.ForeignKey('StudentPost', on_delete=models.CASCADE, related_name="shared_posts")  
+    timestamp = models.DateTimeField(auto_now_add=True)  
+    
+    def __str__(self):
+        return f"{self.user.username} shared {self.original_post.title}"
+
 
 
 

@@ -33,5 +33,6 @@ urlpatterns = [
     path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
     path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
     path('friend-request/decline/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
+    path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
 ]
 
