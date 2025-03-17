@@ -10,7 +10,6 @@ from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
 from django.http import JsonResponse
-from django.contrib.auth.decorators import login_required
 from .models import Comment, Like, Share, FriendRequest
 
 #view to display all post/projects

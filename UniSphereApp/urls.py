@@ -1,7 +1,6 @@
 from django.urls import path
 from . import views
 from django.contrib.auth import views as auth_views
-from UniSphereApp import views
 from .views import create_recruiter_profile
 from .views import search_students
 from django.contrib.auth.views import LogoutView

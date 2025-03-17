@@ -17,6 +17,34 @@
                 </strong>
             </p>
             <p>Posted on: {{ post.timestamp }}</p>
+
+            <form action="{% url 'like_post' post.id %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary">
+                    Like ({{ post.likes.count }})
+                </button>
+            </form>
+ 
+            <form action="{% url 'comment_post' post.id %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <input type="text" name="comment" placeholder="Write a comment..." required>
+                <button type="submit" class="btn btn-outline-secondary">Comment</button>
+            </form>
+
+            <form action="{% url 'share_post' post.id %}" method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success">Share</button>
+            </form>
+
+            <div class="mt-2">
+                <strong>Comments:</strong>
+                <ul>
+                    {% for comment in post.comments.all %}
+                        <li><strong>{{ comment.user.username }}</strong>: {{ comment.text }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
         </div>
     {% endfor %}
 </div>

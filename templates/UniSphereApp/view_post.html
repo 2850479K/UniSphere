@@ -35,5 +35,38 @@
 
         <a href="{% url 'post_list' %}" class="btn btn-secondary mt-3">Back to Portfolio</a>
     </div>
+
+    <form action="{% url 'like_post' post.id %}" method="POST" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-primary">
+            Like ({{ post.likes.count }})
+        </button>
+    </form>
+
+    <form action="{% url 'share_post' post.id %}" method="POST" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-success">Share</button>
+    </form>
+
+    <hr>
+
+    <form action="{% url 'comment_post' post.id %}" method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="comment" class="form-label">Add a Comment:</label>
+            <textarea name="comment" class="form-control" rows="2" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit Comment</button>
+    </form>
+
+    <hr>
+
+    <h4>Comments:</h4>
+    <ul>
+        {% for comment in post.comments.all %}
+            <li><strong>{{ comment.user.username }}</strong>: {{ comment.text }}</li>
+        {% endfor %}
+    </ul>
+
 </div>
 {% endblock %}
