@@ -18,14 +18,14 @@
             </p>
             <p>Posted on: {{ post.timestamp }}</p>
 
-            <form action="{% url 'like_post' post.id %}" method="POST" class="d-inline">
+            <form action="{% url 'toggle_like' post.id %}" method="POST" class="d-inline">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-primary">
                     Like ({{ post.likes.count }})
                 </button>
             </form>
  
-            <form action="{% url 'comment_post' post.id %}" method="POST" class="d-inline">
+            <form action="{% url 'get_comments' post.id %}" method="POST" class="d-inline">
                 {% csrf_token %}
                 <input type="text" name="comment" placeholder="Write a comment..." required>
                 <button type="submit" class="btn btn-outline-secondary">Comment</button>
