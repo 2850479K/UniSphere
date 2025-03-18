@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile Not Available{% endblock %}
+
+{% block content %}
+<div class="container text-center mt-5">
+    <img src="{{ profile.get_profile_picture_url }}" class="rounded-circle mb-3" 
+         style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Picture">
+    <h2>{{ profile.user.username }}</h2>
+    <p>This profile is private.</p>
+</div>
+{% endblock %}

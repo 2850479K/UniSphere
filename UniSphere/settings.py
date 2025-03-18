@@ -56,7 +56,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-ROOT_URLCONF = 'UniSphereApp.urls'
+ROOT_URLCONF = 'UniSphere.urls'
 
 TEMPLATES = [
     {

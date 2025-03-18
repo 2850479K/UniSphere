@@ -1,27 +1,43 @@
 from django import forms
-from .models import StudentPost, User
 from django.contrib.auth.forms import UserCreationForm
-from .models import RecruiterProfile
-from .models import StudentProfile
+from django.contrib.auth import get_user_model
+from .models import StudentPost, Project, RecruiterProfile, StudentProfile
 
-#create form for a new post
-class StudentPostForm(forms.ModelForm):
-    files = forms.FileField(
-        #allow for mulitple uploads
-        widget=forms.ClearableFileInput(attrs={'multiple':True}), required=False)
+User = get_user_model()
 
-    class Meta:
-        model = StudentPost
-        fields = ['title', 'caption', 'files']
-
+# User & Authentication Forms
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
-    role = role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
+    role = forms.ChoiceField(choices=User.ROLE_CHOICES, widget=forms.Select)
 
     class Meta:
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'role']
 
+# Profile Form
+class StudentProfileForm(forms.ModelForm):
+    delete_picture = forms.BooleanField(required=False, label="Delete profile picture")
+
+    class Meta:
+        model = StudentProfile
+        fields = ["profile_picture", "full_name", "gender", "languages", "visibility"]
+        
+# Project & Post Forms
+class ProjectForm(forms.ModelForm):
+    class Meta:
+        model = Project
+        fields = ['title', 'description']
+
+class StudentPostForm(forms.ModelForm):
+    files = forms.FileField(
+        widget=forms.ClearableFileInput(attrs={'multiple': True}), required=False
+    )
+
+    class Meta:
+        model = StudentPost
+        fields = ['title', 'caption', 'files']
+
+# Recruiter Profile & Student Search Forms
 class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile
