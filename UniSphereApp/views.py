@@ -184,20 +184,24 @@ def recruiter_dashboard(request):
 @login_required
 def invite_student(request, student_id):
     student = get_object_or_404(StudentProfile, id=student_id)
+    recruiter = request.user.recruiterprofile
 
     existing_invite = Invitation.objects.filter(recruiter=request.user, student=student).first()
     if existing_invite:
         return JsonResponse({'message': 'Invitation already sent'}, status=400)
 
     Invitation.objects.create(recruiter=request.user, student=student)
-    return JsonResponse({'message': 'Invitation sent successfully'})
+    return JsonResponse({"message": "Invitation Sent", "status": "invited"})
 
 
 @login_required
 def save_student(request, student_id):
     student = get_object_or_404(StudentProfile, id=student_id)
+    recruiter = request.user.recruiterprofile
 
-    request.user.recruiterprofile.favorite_students.add(student)
+    if student in recruiter.saved_students.all():
+        return JsonResponse({"message": "Already Saved"}, status=400)
 
-    return JsonResponse({'message': 'Student saved successfully'})
+    recruiter.saved_students.add(student)
+    return JsonResponse({"message": "Student Saved", "status": "saved"})
 

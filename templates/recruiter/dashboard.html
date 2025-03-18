@@ -13,6 +13,7 @@
              <div class="form-group mb-3">
                  <label for="school">School:</label>
                  <input type="text" id="school" name="school" class="form-control" placeholder="Enter school">
+                 <div id="school-suggestions" class="suggestion-box"></div>
              </div>
              <div class="form-group mb-3">
                  <label for="course">Course:</label>
@@ -24,13 +25,14 @@
              </div>
              <div class="form-group mb-3">
                  <label for="skills">Skills:</label>
-                 <input type="text" id="skills" name="skills" class="form-control" placeholder="Enter skills">
+                <input type="text" id="skills" name="skills" class="form-control" placeholder="Enter skills">
              </div>
              <div class="text-center">
                  <button type="submit" class="btn btn-primary">Search</button>
              </div>
          </form>
-         
+
+
          <h4 class="mt-4">Search Results:</h4>
          <div class="table-responsive">
              <table class="table table-bordered text-center">
@@ -86,7 +88,11 @@
                  let studentId = this.getAttribute('data-student-id');
                  fetch(`/recruiter/invite/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
                      .then(response => response.json())
-                     .then(data => alert(data.message))
+                     .then(data => {
+                         this.innerText = "Invited";
+                         this.classList.add("btn-secondary");
+                         this.disabled = true;
+                    })
                      .catch(error => console.error('Error:', error));
              });
          });
@@ -96,10 +102,15 @@
                  let studentId = this.getAttribute('data-student-id');
                  fetch(`/recruiter/save/${studentId}/`, { method: 'POST', headers: {'X-CSRFToken': '{{ csrf_token }}' }})
                      .then(response => response.json())
-                     .then(data => alert(data.message))
+                     .then(data => {
+                         this.innerText = "Saved";
+                         this.classList.add("btn-success");
+                         this.disabled = true;
+                     })
                      .catch(error => console.error('Error:', error));
              });
          });
      });
+
  </script>
  {% endblock %}
