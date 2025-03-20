@@ -28,4 +28,15 @@ urlpatterns = [
 
     # Recruiter & Student Search
     path('search_students/', views.search_students, name='search_students'),
+
+    # Social Features
+    path('posts/<int:post_id>/comment/', views.add_comment, name='add_comment'),
+    path('posts/<int:post_id>/comments/', views.get_comments, name='get_comments'),
+    path('posts/<int:post_id>/like/', views.toggle_like, name='toggle_like'),
+    path('posts/<int:post_id>/share/', views.share_post, name='share_post'),
+
+    path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
+    path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
+    path('friend-request/decline/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
+    path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
 ]
