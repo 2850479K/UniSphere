@@ -40,6 +40,12 @@ class PostFile(models.Model):
     post = models.ForeignKey(StudentPost, related_name="files", on_delete=models.CASCADE)
     file = models.FileField(upload_to="uploads/")
 
+    def delete(self, *args, **kwargs):
+        if self.file:
+            storage = self.file.storage
+            storage.delete(self.file.name)  
+        super().delete(*args, **kwargs)
+
 # Recruiter & Student Profiles
 class RecruiterProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -63,13 +69,13 @@ class StudentProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
-    full_name = models.CharField(max_length=100, blank=False)
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=False)
-    university = models.CharField(max_length=255, blank=True)  # Changed to simple text input
-    bio = models.TextField(blank=True)
-    interests = models.TextField(blank=True)  # Changed to simple text input
-    languages = models.CharField(max_length=255, blank=True)  # Changed to simple text input
-    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
+    full_name = models.CharField(max_length=100, blank=True, null=True)  
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
+    school = models.CharField(max_length=255, blank=True, null=True)  
+    bio = models.TextField(blank=True, null=True)  
+    interests = models.TextField(blank=True, null=True)  
+    languages = models.CharField(max_length=255, blank=True, null=True)  
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public', help_text="Not shown on profile") 
 
     def get_profile_picture_url(self):
         if self.profile_picture:
@@ -85,7 +91,7 @@ class Comment(models.Model):
     post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="comments")
     content = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     def __str__(self):
         return f"{self.user.username} commented on {self.post.title[:30]}"
 
@@ -94,16 +100,10 @@ class Like(models.Model):
     post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="likes")
     created_at = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"{self.user.username} liked {self.post.title[:30]}"
-
 class Share(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shares")
     created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} shared {self.post.title[:30]}"
 
 class FriendRequest(models.Model):
     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_requests", on_delete=models.CASCADE)
@@ -118,6 +118,6 @@ class SharedPost(models.Model):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  
     original_post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shared_posts")  
     timestamp = models.DateTimeField(auto_now_add=True)  
-    
+
     def __str__(self):
         return f"{self.user.username} shared {self.original_post.title}"

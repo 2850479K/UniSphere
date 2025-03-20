@@ -18,29 +18,29 @@
                 {% endif %}
             </div>
 
-            {% if profile.full_name %}
+            {% if profile.full_name and profile.full_name != "Not set" %}
                 <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
             {% endif %}
 
-            {% if profile.gender %}
+            {% if profile.gender and profile.gender != "Not set" %}
                 <p><strong>Gender:</strong> {{ profile.gender }}</p>
             {% endif %}
 
-            {% if profile.university %}
-                <p><strong>University:</strong> {{ profile.university }}</p>
+            {% if profile.school and profile.school != "Not set" %}
+                <p><strong>School:</strong> {{ profile.school }}</p>
             {% endif %}
 
-            {% if profile.bio %}
+            {% if profile.bio and profile.bio != "Not set" %}
                 <p><strong>Bio:</strong> {{ profile.bio }}</p>
             {% endif %}
 
-            {% if profile.interests %}
+            {% if profile.interests and profile.interests != "Not set" %}
                 <p><strong>Interests:</strong> {{ profile.interests }}</p>
             {% endif %}
 
-            {% if profile.languages %}
-    <p><strong>Languages:</strong> {{ profile.languages }}</p>
-{% endif %}
+            {% if profile.languages and profile.languages != "Not set" %}
+                <p><strong>Languages:</strong> {{ profile.languages }}</p>
+            {% endif %}
         </div>
 
         <h3 class="mt-4">Your Recent Projects</h3>
