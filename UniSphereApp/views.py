@@ -64,15 +64,14 @@ def profile(request, username):
 
     is_owner = request.user == profile_user  
 
-   
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
     if request.method == "POST" and is_owner:
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            if request.POST.get("delete_picture"):  
-                profile.delete_profile_picture()  
+            if request.POST.get("delete_picture"):
+                profile.delete_profile_picture()
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=profile_user.username)
@@ -87,7 +86,7 @@ def profile(request, username):
             "profile": profile, 
             "projects": projects,  
             "profile_user": profile_user, 
-            "is_owner": is_owner
+            "is_owner": is_owner,
         }
     )
 
@@ -250,7 +249,6 @@ def delete_post(request, post_id):
     return redirect('project', project_id=post.project.id)
 
 # Recruiter Profile & Student Search
-
 @login_required
 def create_recruiter_profile(request):
     if request.method == 'POST':

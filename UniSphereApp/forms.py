@@ -1,8 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from django_countries.fields import CountryField 
-from django_countries.widgets import CountrySelectWidget
 from .models import StudentPost, Project, RecruiterProfile, StudentProfile
 
 User = get_user_model()

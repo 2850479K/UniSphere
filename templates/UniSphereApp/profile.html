@@ -18,7 +18,6 @@
                 {% endif %}
             </div>
 
-            <!-- Hide fields that are not set -->
             {% if profile.full_name %}
                 <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
             {% endif %}
@@ -40,12 +39,7 @@
             {% endif %}
 
             {% if profile.languages %}
-                <!-- If stored as comma-separated, you can split and display each with a badge -->
-                <p><strong>Languages:</strong>
-                    {% for lang in profile.languages.split "," %}
-                        <span class="badge bg-info text-dark">{{ lang }}</span>
-                    {% endfor %}
-                </p>
+                <p><strong>Languages Spoken:</strong> {{ profile.languages }}</p>
             {% endif %}
         </div>
 

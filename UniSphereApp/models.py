@@ -69,7 +69,7 @@ class StudentProfile(models.Model):
     )
     university = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
-    interests = models.TextField(blank=True)
+    interests = models.TextField(blank=True) 
     languages = models.CharField(max_length=255, blank=True)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
 

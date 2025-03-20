@@ -5,18 +5,43 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="478826dd-d355-4456-8e32-fe07cdd67ec8" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/templates/UniSphereApp/create_profile.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/templates/UniSphereApp/edit_profile.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphere/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphere/settings.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UniSphereApp/forms.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/forms.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UniSphereApp/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/models.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/UniSphereApp/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/urls.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/UniSphereApp/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/UniSphereApp/views.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/db.sqlite3" beforeDir="false" afterPath="$PROJECT_DIR$/db.sqlite3" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/login.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/login.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/profile_pics/cat_7dGRrME.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/profile_pics/cat_lIn5O3B.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/profile_pics/cat_lIn5O3B_EMYLr5E.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S0747563224002978-main.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S1876139924000288-main.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S1876139924000288-main_W9HorVB.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S1876139924000288-main_qqJfV7w.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S2666920X2400122X-main.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S2666920X2500013X-main.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/1-s2.0-S2666920X25000177-main.pdf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/742267d8637b4cbc83ce2c6c92fa0af9.mov" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/742267d8637b4cbc83ce2c6c92fa0af9_0nsI7nq.mov" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/742267d8637b4cbc83ce2c6c92fa0af9_F7y7gA9.mov" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/742267d8637b4cbc83ce2c6c92fa0af9_hHREtTs.mov" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/742267d8637b4cbc83ce2c6c92fa0af9_k4TrLUT.mov" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/ER-Diagram_1.drawio_1.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/ER-Diagram_1.drawio_1_rjBVoJ7.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_7dGRrME.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_KFChSLV.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_Ym4Me0C.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_cUxhfHn.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_fyZWGQC.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_hAAQGVu.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_lIn5O3B.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_mp7b1MF.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/cat_s5ZydGw.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/jiacheng.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/media/uploads/jiacheng_08vi3GT.docx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/static/images/cat.jpg" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/create_profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/create_profile.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/profile.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/profile.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/templates/UniSphereApp/register.html" beforeDir="false" afterPath="$PROJECT_DIR$/templates/UniSphereApp/register.html" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,13 +69,13 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "DefaultHtmlFileTemplate": "HTML File",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "git-widget-placeholder": "more-profile-features"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;DefaultHtmlFileTemplate&quot;: &quot;HTML File&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;more-profile-features&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
