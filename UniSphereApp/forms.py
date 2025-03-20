@@ -14,14 +14,29 @@ class UserRegisterForm(UserCreationForm):
         model = User
         fields = ['username', 'email', 'password1', 'password2', 'role']
 
-# Profile Form
+# Profile Forms
+class CreateProfileForm(forms.ModelForm):
+    class Meta:
+        model = StudentProfile
+        fields = ['full_name', 'gender', 'profile_picture']
+
 class StudentProfileForm(forms.ModelForm):
     delete_picture = forms.BooleanField(required=False, label="Delete profile picture")
 
     class Meta:
         model = StudentProfile
-        fields = ["profile_picture", "full_name", "gender", "languages", "visibility"]
-        
+        fields = ["profile_picture", "full_name", "gender", "university", "interests", "languages", "visibility"]
+
+class EditProfileForm(forms.ModelForm):
+    university = forms.CharField(required=False, label="University")
+    bio = forms.CharField(widget=forms.Textarea, required=False, label="Bio")
+    interests = forms.CharField(required=False, label="Interests")
+    languages = forms.CharField(required=False, label="Languages Spoken")
+
+    class Meta:
+        model = StudentProfile
+        fields = ['profile_picture', 'university', 'bio', 'interests', 'languages']
+
 # Project & Post Forms
 class ProjectForm(forms.ModelForm):
     class Meta:
@@ -35,7 +50,10 @@ class StudentPostForm(forms.ModelForm):
 
     class Meta:
         model = StudentPost
-        fields = ['title', 'caption', 'files']
+        fields = ['title', 'caption']
+        required = {
+            'files': False
+        }  
 
 # Recruiter Profile & Student Search Forms
 class RecruiterProfileForm(forms.ModelForm):

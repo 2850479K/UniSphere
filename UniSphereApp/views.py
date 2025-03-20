@@ -1,15 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
 
 User = get_user_model()
 
 # Authentication
-
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
@@ -20,10 +19,47 @@ def register(request):
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
             user.save()
-            return redirect('login')
+       
+            login(request, user)
+
+            return redirect('create_profile')
     else:
         form = UserRegisterForm()
+    
     return render(request, 'UniSphereApp/register.html', {'form': form})
+
+def custom_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            messages.success(request, "You have successfully logged in.")
+            return redirect('my_profile')
+        else:
+            messages.error(request, "Invalid username or password.")
+
+    return render(request, 'UniSphereApp/login.html')
+
+@login_required
+def create_profile(request):
+    profile, created = StudentProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CreateProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile created successfully!")
+            return redirect('profile', username=request.user.username)
+        else:
+            messages.error(request, "Error creating profile. Please check the form.")
+
+    else:
+        form = CreateProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
@@ -33,15 +69,14 @@ def profile(request, username):
 
     is_owner = request.user == profile_user  
 
-   
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
     if request.method == "POST" and is_owner:
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            if request.POST.get("delete_picture"):  
-                profile.delete_profile_picture()  
+            if request.POST.get("delete_picture"):
+                profile.delete_profile_picture()
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=profile_user.username)
@@ -56,7 +91,7 @@ def profile(request, username):
             "profile": profile, 
             "projects": projects,  
             "profile_user": profile_user, 
-            "is_owner": is_owner
+            "is_owner": is_owner,
         }
     )
 
@@ -64,6 +99,24 @@ def profile(request, username):
 def my_profile(request):
     """Redirects the user to their own profile page."""
     return redirect('profile', username=request.user.username)
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(StudentProfile, user=request.user)
+
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('profile', username=request.user.username)
+        else:
+            messages.error(request, "Error updating profile. Please check the form.")
+
+    else:
+        form = EditProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/edit_profile.html', {'form': form})
 
 # Portfolio & Projects
 def user_portfolio(request, username):
@@ -86,6 +139,8 @@ def create_project(request):
             project.save()
             messages.success(request, "Project created successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error creating project. Please check the form.")
 
     else:
         form = ProjectForm()
@@ -104,8 +159,11 @@ def edit_project(request, project_id):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            messages.success(request, "Project updated successfully.")
+            messages.success(request, "Project updated successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error updating project. Please check the form.")
+
     else:
         form = ProjectForm(instance=project)
 
@@ -127,7 +185,6 @@ def delete_project(request, project_id):
     return redirect('project', project_id=project.id)
 
 # Posts
-
 @login_required
 def create_post(request, project_id):
     project = get_object_or_404(Project, id=project_id)
@@ -145,8 +202,10 @@ def create_post(request, project_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post added successfully.")
+            messages.success(request, "Post added successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error adding post. Please check the form.")
 
     else:
         form = StudentPostForm()
@@ -179,8 +238,10 @@ def edit_post(request, post_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post updated successfully.")
+            messages.success(request, "Post updated successfully!")
             return redirect('project', project_id=post.project.id)
+        else:
+            messages.error(request, "Error updating post. Please check the form.")
 
     else:
         form = StudentPostForm(instance=post)
@@ -204,7 +265,6 @@ def delete_post(request, post_id):
     return redirect('project', project_id=post.project.id)
 
 # Recruiter Profile & Student Search
-
 @login_required
 def create_recruiter_profile(request):
     if request.method == 'POST':

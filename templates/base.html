@@ -15,6 +15,20 @@
     <link rel="stylesheet" type="text/css" href="{% static 'css/styles.css' %}">
 </head>
 <body>
+    {% if messages %}
+    <div class="position-fixed start-50 translate-middle-x mt-3" style="z-index: 1050;">
+        {% for message in messages %}
+            <div class="toast show align-items-center text-white bg-{% if message.tags == 'success' %}success{% elif message.tags == 'error' %}danger{% else %}info{% endif %} border-0" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
 
     <!-- Modern Header -->
     <header class="container-fluid bg-primary text-white py-3 shadow">
@@ -48,5 +62,18 @@
 
     <!-- Custom JavaScript -->
     <script src="{% static 'js/scripts.js' %}"></script>
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl, { delay: 3000 }); // Auto-dismiss after 3 seconds
+    });
+    toastList.forEach(toast => toast.show());
+});
+</script>
+
+
+    </div>
+
 </body>
 </html>

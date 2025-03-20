@@ -63,21 +63,18 @@ class StudentProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
-    full_name = models.CharField(max_length=100, blank=True)
-    gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')])
-    languages = models.CharField(max_length=255, blank=True)
-    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')  
+    full_name = models.CharField(max_length=100, blank=False)
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=False)
+    university = models.CharField(max_length=255, blank=True)  # Changed to simple text input
+    bio = models.TextField(blank=True)
+    interests = models.TextField(blank=True)  # Changed to simple text input
+    languages = models.CharField(max_length=255, blank=True)  # Changed to simple text input
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
 
     def get_profile_picture_url(self):
         if self.profile_picture:
             return self.profile_picture.url
         return "/static/images/default_pfp.jpeg"
-
-    def delete_profile_picture(self):
-        if self.profile_picture and os.path.isfile(self.profile_picture.path):
-            os.remove(self.profile_picture.path)
-        self.profile_picture = None
-        self.save()
 
     def __str__(self):
         return self.user.username
