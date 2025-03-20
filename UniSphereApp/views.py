@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
-from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
+from django.http import JsonResponse
+from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
 
 User = get_user_model()
@@ -19,9 +20,7 @@ def register(request):
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
             user.save()
-       
             login(request, user)
-
             return redirect('create_profile')
     else:
         form = UserRegisterForm()
@@ -55,7 +54,6 @@ def create_profile(request):
             return redirect('profile', username=request.user.username)
         else:
             messages.error(request, "Error creating profile. Please check the form.")
-
     else:
         form = CreateProfileForm(instance=profile)
 
@@ -66,12 +64,12 @@ def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, created = StudentProfile.objects.get_or_create(user=profile_user)
     projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5] 
-
+    
     is_owner = request.user == profile_user  
-
+    
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
-
+    
     if request.method == "POST" and is_owner:
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
@@ -97,172 +95,7 @@ def profile(request, username):
 
 @login_required
 def my_profile(request):
-    """Redirects the user to their own profile page."""
     return redirect('profile', username=request.user.username)
-
-@login_required
-def edit_profile(request):
-    profile = get_object_or_404(StudentProfile, user=request.user)
-
-    if request.method == 'POST':
-        form = EditProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile updated successfully!")
-            return redirect('profile', username=request.user.username)
-        else:
-            messages.error(request, "Error updating profile. Please check the form.")
-
-    else:
-        form = EditProfileForm(instance=profile)
-
-    return render(request, 'UniSphereApp/edit_profile.html', {'form': form})
-
-# Portfolio & Projects
-def user_portfolio(request, username):
-    profile_user = get_object_or_404(User, username=username)
-    projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
-    return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
-
-def project(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-    posts = StudentPost.objects.filter(project=project).order_by('-timestamp')
-    return render(request, 'UniSphereApp/project.html', {'project': project, 'posts': posts})
-
-@login_required
-def create_project(request):
-    if request.method == 'POST':
-        form = ProjectForm(request.POST)
-        if form.is_valid():
-            project = form.save(commit=False)
-            project.user = request.user
-            project.save()
-            messages.success(request, "Project created successfully!")
-            return redirect('project', project_id=project.id)
-        else:
-            messages.error(request, "Error creating project. Please check the form.")
-
-    else:
-        form = ProjectForm()
-
-    return render(request, 'UniSphereApp/create_project.html', {'form': form})
-
-@login_required
-def edit_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-
-    if request.user != project.user:
-        messages.error(request, "You are not authorized to edit this project.")
-        return redirect('project', project_id=project.id)
-
-    if request.method == 'POST':
-        form = ProjectForm(request.POST, instance=project)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Project updated successfully!")
-            return redirect('project', project_id=project.id)
-        else:
-            messages.error(request, "Error updating project. Please check the form.")
-
-    else:
-        form = ProjectForm(instance=project)
-
-    return render(request, 'UniSphereApp/edit_project.html', {'form': form, 'project': project})
-
-@login_required
-def delete_project(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-
-    if request.user != project.user:
-        messages.error(request, "You are not authorized to delete this project.")
-        return redirect('project', project_id=project.id)
-
-    if request.method == "POST":
-        project.delete()
-        messages.success(request, "Project successfully deleted.")
-        return redirect('user_portfolio', username=request.user.username)
-
-    return redirect('project', project_id=project.id)
-
-# Posts
-@login_required
-def create_post(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
-
-    if request.method == 'POST':
-        form = StudentPostForm(request.POST, request.FILES)
-        files = request.FILES.getlist('files')
-
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.user = request.user
-            post.project = project
-            post.save()
-
-            for file in files:
-                PostFile.objects.create(post=post, file=file)
-
-            messages.success(request, "Post added successfully!")
-            return redirect('project', project_id=project.id)
-        else:
-            messages.error(request, "Error adding post. Please check the form.")
-
-    else:
-        form = StudentPostForm()
-
-    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
-
-@login_required
-def view_post(request, post_id):
-    post = get_object_or_404(StudentPost, id=post_id)
-    return render(request, 'UniSphereApp/view_post.html', {'post': post})
-
-@login_required
-def edit_post(request, post_id):
-    post = get_object_or_404(StudentPost, id=post_id)
-
-    if request.user != post.user:
-        messages.error(request, "You are not authorized to edit this post.")
-        return redirect('project', project_id=post.project.id)
-
-    if request.method == 'POST':
-        form = StudentPostForm(request.POST, request.FILES, instance=post)
-        files = request.FILES.getlist('files')
-
-        if form.is_valid():
-            post.save()
-
-            files_to_delete = request.POST.getlist('delete_files')
-            PostFile.objects.filter(id__in=files_to_delete).delete()
-
-            for file in files:
-                PostFile.objects.create(post=post, file=file)
-
-            messages.success(request, "Post updated successfully!")
-            return redirect('project', project_id=post.project.id)
-        else:
-            messages.error(request, "Error updating post. Please check the form.")
-
-    else:
-        form = StudentPostForm(instance=post)
-        existing_files = PostFile.objects.filter(post=post)
-
-    return render(request, 'UniSphereApp/edit_post.html', {'form': form, 'post': post, 'existing_files': existing_files})
-
-@login_required
-def delete_post(request, post_id):
-    post = get_object_or_404(StudentPost, id=post_id)
-
-    if post.user != request.user:
-        messages.error(request, "You are not authorized to delete this post.")
-        return redirect('project', project_id=post.project.id)
-
-    if request.method == "POST":
-        post.delete()
-        messages.success(request, "Post successfully deleted.")
-        return redirect('project', project_id=post.project.id)
-
-    return redirect('project', project_id=post.project.id)
 
 # Recruiter Profile & Student Search
 @login_required
@@ -295,3 +128,62 @@ def search_students(request):
             students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+
+# Social Features
+@login_required
+def add_comment(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    if request.method == "POST":
+        content = request.POST.get("content", "").strip()
+        if content:
+            Comment.objects.create(user=request.user, post=post, content=content)
+    return redirect('view_post', post_id=post.id)
+
+@login_required
+def get_comments(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    comments = list(post.comments.values('user__username', 'content', 'created_at'))
+    return JsonResponse({"comments": comments})
+
+@login_required
+def toggle_like(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    like, created = Like.objects.get_or_create(user=request.user, post=post)
+    if not created:
+        like.delete()
+        return JsonResponse({"message": "Unliked", "likes": post.likes.count()})
+    return JsonResponse({"message": "Liked", "likes": post.likes.count()})
+
+@login_required
+def share_post(request, post_id):
+    original_post = get_object_or_404(StudentPost, id=post_id)
+    if SharedPost.objects.filter(user=request.user, original_post=original_post).exists():
+        messages.warning(request, "You have already shared this post.")
+        return redirect('post_list')
+    SharedPost.objects.create(user=request.user, original_post=original_post)
+    messages.success(request, "Post shared successfully!")
+    return redirect('post_list')
+
+@login_required
+def send_friend_request(request, user_id):
+    to_user = get_object_or_404(User, id=user_id)
+    if request.user != to_user:
+        FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+    return JsonResponse({"message": "Friend request sent"})
+
+@login_required
+def accept_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.accepted = True
+    friend_request.save()
+    return JsonResponse({"message": "Friend request accepted"})
+
+@login_required
+def decline_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.delete()
+    return JsonResponse({"message": "Friend request declined"})
+
+def shared_posts_list(request):
+    shared_posts = SharedPost.objects.all().order_by('-timestamp')
+    return render(request, 'UniSphereApp/shared_posts_list.html', {'shared_posts': shared_posts})

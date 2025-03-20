@@ -52,9 +52,6 @@ class RecruiterProfile(models.Model):
     def __str__(self):
         return self.company_name
 
-def profile_picture_upload_path(instance, filename):
-    return f"profile_pictures/{instance.user.username}/{filename}"
-
 class StudentProfile(models.Model):
     VISIBILITY_CHOICES = [
         ('public', 'Public'),
@@ -65,10 +62,10 @@ class StudentProfile(models.Model):
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=False)
     gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=False)
-    university = models.CharField(max_length=255, blank=True)  # Changed to simple text input
+    university = models.CharField(max_length=255, blank=True)
     bio = models.TextField(blank=True)
-    interests = models.TextField(blank=True)  # Changed to simple text input
-    languages = models.CharField(max_length=255, blank=True)  # Changed to simple text input
+    interests = models.TextField(blank=True)
+    languages = models.CharField(max_length=255, blank=True)
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')
 
     def get_profile_picture_url(self):
@@ -78,3 +75,46 @@ class StudentProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+# Social Features
+class Comment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    def __str__(self):
+        return f"{self.user.username} commented on {self.post.title[:30]}"
+
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.post.title[:30]}"
+
+class Share(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shares")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} shared {self.post.title[:30]}"
+
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_requests", on_delete=models.CASCADE)
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="received_requests", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Friend Request from {self.from_user.username} to {self.to_user.username}"
+
+class SharedPost(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  
+    original_post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shared_posts")  
+    timestamp = models.DateTimeField(auto_now_add=True)  
+    
+    def __str__(self):
+        return f"{self.user.username} shared {self.original_post.title}"
