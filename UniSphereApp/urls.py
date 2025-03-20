@@ -6,7 +6,9 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('register/', views.register, name='register'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
+    path('create-profile/', views.create_profile, name='create_profile'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
+    path('accounts/login/', views.custom_login, name='login'),
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
     path('profile/<str:username>/', views.profile, name='profile'),
     path('profile/', views.my_profile, name='my_profile'),

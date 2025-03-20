@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Register - UniSphere{% endblock %}
 
@@ -6,34 +7,31 @@
 <div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
     <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
         <h2 class="text-center mb-4">Register</h2>
+
+        {% if form.errors %}
+            <div class="alert alert-danger">
+                <ul>
+                    {% for field, error in form.errors.items %}
+                        <li>{{ field|title }}: {{ error|join:", " }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
-            <div class="mb-3">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" name="username" id="username" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="email" class="form-label">Email</label>
-                <input type="email" name="email" id="email" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="role" class="form-label">Register as</label>
-                <select name="role" id="role" class="form-select" required>
-                    <option value="">Select your role</option>
-                    <option value="student">Student</option>
-                    <option value="recruiter">Recruiter</option>
-                </select>
-            </div>
-            <div class="mb-3">
-                <label for="password1" class="form-label">Password</label>
-                <input type="password" name="password1" id="password1" class="form-control" required>
-            </div>
-            <div class="mb-3">
-                <label for="password2" class="form-label">Confirm Password</label>
-                <input type="password" name="password2" id="password2" class="form-control" required>
-            </div>
+            {% for field in form %}
+                <div class="mb-3">
+                    {{ field.label_tag }}
+                    {{ field }}
+                    {% if field.errors %}
+                        <small class="text-danger">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
             <button type="submit" class="btn btn-success w-100">Register</button>
         </form>
+
         <div class="text-center mt-3">
             <p>Already have an account? <a href="{% url 'login' %}" class="text-decoration-none">Login here</a></p>
         </div>

@@ -1,15 +1,14 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
 
 User = get_user_model()
 
 # Authentication
-
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
@@ -20,10 +19,42 @@ def register(request):
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
             user.save()
-            return redirect('login')
+       
+            login(request, user)
+
+            return redirect('create_profile')
     else:
         form = UserRegisterForm()
+    
     return render(request, 'UniSphereApp/register.html', {'form': form})
+
+def custom_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            return redirect('my_profile')
+        else:
+            messages.error(request, "Invalid username or password.")
+    return render(request, 'UniSphereApp/login.html')
+
+@login_required
+def create_profile(request):
+    profile, created = StudentProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CreateProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            return redirect('profile', username=request.user.username)
+
+    else:
+        form = CreateProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
@@ -64,6 +95,21 @@ def profile(request, username):
 def my_profile(request):
     """Redirects the user to their own profile page."""
     return redirect('profile', username=request.user.username)
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(StudentProfile, user=request.user)
+    
+    if request.method == 'POST':
+        form = EditProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('profile', username=request.user.username)
+    else:
+        form = EditProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/edit_profile.html', {'form': form})
 
 # Portfolio & Projects
 def user_portfolio(request, username):
