@@ -25,7 +25,7 @@ class StudentProfileForm(forms.ModelForm):
 
     class Meta:
         model = StudentProfile
-        fields = ["profile_picture", "full_name", "gender", "languages", "visibility"]
+        fields = ["profile_picture", "full_name", "gender", "university", "interests", "languages", "visibility"]
 
 class EditProfileForm(forms.ModelForm):
     university = forms.CharField(required=False, label="University")

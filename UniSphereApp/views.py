@@ -36,9 +36,11 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
+            messages.success(request, "You have successfully logged in.")
             return redirect('my_profile')
         else:
             messages.error(request, "Invalid username or password.")
+
     return render(request, 'UniSphereApp/login.html')
 
 @login_required
@@ -49,7 +51,10 @@ def create_profile(request):
         form = CreateProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
+            messages.success(request, "Profile created successfully!")
             return redirect('profile', username=request.user.username)
+        else:
+            messages.error(request, "Error creating profile. Please check the form.")
 
     else:
         form = CreateProfileForm(instance=profile)
@@ -98,13 +103,16 @@ def my_profile(request):
 @login_required
 def edit_profile(request):
     profile = get_object_or_404(StudentProfile, user=request.user)
-    
+
     if request.method == 'POST':
         form = EditProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=request.user.username)
+        else:
+            messages.error(request, "Error updating profile. Please check the form.")
+
     else:
         form = EditProfileForm(instance=profile)
 
@@ -131,6 +139,8 @@ def create_project(request):
             project.save()
             messages.success(request, "Project created successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error creating project. Please check the form.")
 
     else:
         form = ProjectForm()
@@ -149,8 +159,11 @@ def edit_project(request, project_id):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            messages.success(request, "Project updated successfully.")
+            messages.success(request, "Project updated successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error updating project. Please check the form.")
+
     else:
         form = ProjectForm(instance=project)
 
@@ -172,7 +185,6 @@ def delete_project(request, project_id):
     return redirect('project', project_id=project.id)
 
 # Posts
-
 @login_required
 def create_post(request, project_id):
     project = get_object_or_404(Project, id=project_id)
@@ -190,8 +202,10 @@ def create_post(request, project_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post added successfully.")
+            messages.success(request, "Post added successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error adding post. Please check the form.")
 
     else:
         form = StudentPostForm()
@@ -224,8 +238,10 @@ def edit_post(request, post_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post updated successfully.")
+            messages.success(request, "Post updated successfully!")
             return redirect('project', project_id=post.project.id)
+        else:
+            messages.error(request, "Error updating post. Please check the form.")
 
     else:
         form = StudentPostForm(instance=post)
