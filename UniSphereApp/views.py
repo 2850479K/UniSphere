@@ -10,6 +10,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm
+from django.contrib import messages
 
 User = get_user_model()
 
@@ -17,6 +18,10 @@ User = get_user_model()
 
 def home(request):
     return render(request, 'UniSphereApp/home.html')
+
+def post_list(request):
+    posts = StudentPost.objects.all().order_by('-timestamp')
+    return render(request, 'UniSphereApp/post_list.html', {'posts': posts})
 
 def register(request):
     if request.method == 'POST':
@@ -36,9 +41,8 @@ def profile(request, username):
     profile, created = StudentProfile.objects.get_or_create(user=profile_user)
     projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5] 
 
-    is_owner = request.user == profile_user  
+    is_owner = request.user == profile_user
 
-   
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
@@ -212,16 +216,34 @@ def delete_post(request, post_id):
 
 @login_required
 def create_recruiter_profile(request):
-    if request.method == 'POST':
+    existing_profile = RecruiterProfile.objects.filter(user=request.user).first()
+
+    if request.method == "POST":
+        if existing_profile:
+            messages.warning(request, "One ID can only create one profile!")
+            return redirect("create_recruiter_profile")
+
         form = RecruiterProfileForm(request.POST, request.FILES)
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
             profile.save()
-            return redirect('home')
+            messages.success(request, "Successfully created profile!")
+            return redirect("create_recruiter_profile")
+        else:
+            messages.error(request, "Please fill in all required fields!")
+
     else:
-        form = RecruiterProfileForm()
-    return render(request, 'recruiter/create_profile.html', {'form': form})
+        form = RecruiterProfileForm(instance=existing_profile)
+
+    return render(request, "recruiter/create_profile.html", {"form": form})
+
+
+
+@login_required
+def check_profile(request):
+    profile_exists = RecruiterProfile.objects.filter(user=request.user).exists()
+    return JsonResponse({"exists": profile_exists})
 
 def search_students(request):
     form = StudentSearchForm(request.GET)

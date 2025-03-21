@@ -49,11 +49,11 @@ class PostFile(models.Model):
 # Recruiter & Student Profiles
 class RecruiterProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=255)
-    industry = models.CharField(max_length=100)
-    company_description = models.TextField(blank=True, null=True)
-    location = models.CharField(max_length=255, null=True, blank=True)
-    company_website = models.URLField(blank=True, null=True)
+    company_name = models.CharField(max_length=255, blank=False, null=False)
+    industry = models.CharField(max_length=100, blank=False, null=False)
+    company_description = models.TextField(blank=False, null=False,default="Not provided")
+    location = models.CharField(max_length=255,blank=False, null=False,default="Not provided")
+    company_website = models.URLField(blank=False, null=False,default="Not provided")
 
     def __str__(self):
         return self.company_name
@@ -69,9 +69,9 @@ class StudentProfile(models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
-    full_name = models.CharField(max_length=100, blank=True)
-    gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')])
-    languages = models.CharField(max_length=255, blank=True)
+    full_name = models.CharField(max_length=100, blank=True, default="")
+    gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], default="")
+    languages = models.CharField(max_length=255, blank=True, default="")
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')  
 
     def get_profile_picture_url(self):

@@ -1,6 +1,9 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
+from .views import create_recruiter_profile
+from .views import check_profile
+from .views import search_students
 from .views import recruiter_dashboard
 from .views import invite_student, save_student
 from . import views
@@ -13,7 +16,7 @@ urlpatterns = [
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
 
     #portfolio URLs
-    path('portfolio/', views.post_list, name='post_list'),  # View all projects
+    path('portfolio/', views.post_list, name='post_list'),# View all projects
     path('portfolio/createpost/', views.create_post, name='create_post'),  # Create a new project
     path('portfolio/viewpost/<int:project_id>/', views.view_post, name='view_post'),  # View & edit project
     path('portfolio/editpost/<int:project_id>/', views.edit_post, name='edit_post'),
@@ -37,6 +40,7 @@ urlpatterns = [
 
     # Recruiter & Student Search
     path('recruiter/create-profile/', create_recruiter_profile, name='create_recruiter_profile'),
+    path('recruiter/check-profile/', check_profile, name='check_profile'),
     path('recruiter/search-students/', search_students, name='search_students'),
     path("recruiter/dashboard/", recruiter_dashboard, name="recruiter_dashboard"),
     path('recruiter/invite/<int:student_id>/', invite_student, name='invite_student'),

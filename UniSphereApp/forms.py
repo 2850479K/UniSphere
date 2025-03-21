@@ -46,6 +46,16 @@ class RecruiterProfileForm(forms.ModelForm):
             'company_description': forms.Textarea(attrs={'rows': 4}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        required_fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+
+        for field in required_fields:
+            if not cleaned_data.get(field):
+                self.add_error(field, f"{field.replace('_', ' ').title()} is required!")
+
+        return cleaned_data
+
 class StudentSearchForm(forms.Form):
     name = forms.CharField(required=False, label="Student Name")
     school = forms.CharField(required=False, label="School")
