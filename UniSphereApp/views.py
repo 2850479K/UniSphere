@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
@@ -294,16 +296,40 @@ def get_comments(request, post_id):
     ]
     return JsonResponse({"comments": comments_data})
 
+# @login_required
+# def like_post(request, post_id):
+#     post = get_object_or_404(StudentPost, id=post_id)
+#
+#     existing_like = Like.objects.filter(user=request.user, post=post)
+#     if existing_like.exists():
+#         existing_like.delete()
+#     else:
+#         Like.objects.create(user=request.user, post=post)
+#
+#     return redirect('project', project_id=post.project.id)
+
+@require_POST
 @login_required
 def like_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
 
     existing_like = Like.objects.filter(user=request.user, post=post)
+    liked = False
+
     if existing_like.exists():
         existing_like.delete()
     else:
         Like.objects.create(user=request.user, post=post)
+        liked = True
 
+    # If AJAX request, return JSON
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "liked": liked,
+            "likes_count": post.likes.count()
+        })
+
+    # Otherwise, fallback to regular redirect
     return redirect('project', project_id=post.project.id)
 
 @login_required

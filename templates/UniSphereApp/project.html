@@ -36,12 +36,11 @@
                 <h3>{{ post.title }}</h3>
                 <p>{{ post.caption|urlize }}</p>
 
-                <!-- Display Uploaded Files -->
                 {% for file in post.files.all %}
                     {% if file.file.url|lower|slice:'-3:' == "jpg" or file.file.url|lower|slice:'-3:' == "png" %}
-                        <img src="{{ file.file.url }}" class="img-fluid" style="max-width: 500px; height: auto; display:block; margin-top: 10px;" alt="Uploaded Image">
+                        <img src="{{ file.file.url }}" class="img-fluid mt-2" style="max-width: 500px;" alt="Uploaded Image">
                     {% elif file.file.url|lower|slice:'-3:' == "mp4" or file.file.url|lower|slice:'-3:' == "mov" %}
-                        <video controls style="max-width: 500px; height: auto; display:block; margin-top: 10px;">
+                        <video controls class="mt-2" style="max-width: 500px;">
                             <source src="{{ file.file.url }}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
@@ -55,20 +54,19 @@
                 <p><strong>Posted by:</strong> {{ post.user.username }} on {{ post.timestamp }}</p>
 
                 <!-- Social Buttons -->
-                <div class="d-flex align-items-center gap-2">
-
-                    <!-- Like Button (Fixed) -->
-                    <form method="POST" action="{% url 'like_post' post.id %}">
-                        {% csrf_token %}
-                        <button type="submit" class="btn btn-outline-primary">
-                            {% if request.user in post.likes.all %}
-                                Unlike
-                            {% else %}
-                                Like
-                            {% endif %}
-                            ({{ post.likes.count }})
-                        </button>
-                    </form>
+                <div class="d-flex align-items-center gap-3">
+                    <!-- AJAX-Enabled Like Button -->
+                    <button type="button"
+                            class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
+                            style="gap: 6px;"
+                            data-post-id="{{ post.id }}">
+                        {% if request.user in post.likes.all %}
+                            <span class="heart liked">❤</span>
+                        {% else %}
+                            <span class="heart">♡</span>
+                        {% endif %}
+                        <span class="like-count">({{ post.likes.count }})</span>
+                    </button>
 
                     <!-- Share Buttons -->
                     <div class="btn-group">
@@ -86,11 +84,7 @@
                     {% for comment in post.comments.all|dictsortreversed:"created_at"|slice:":5" %}
                         <p><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</p>
                     {% endfor %}
-
-                    <!-- View All Comments -->
                     <a href="{% url 'view_all_comments' post.id %}" class="btn btn-link">View All Comments</a>
-
-                    <!-- Comment Input -->
                     <form method="POST" action="{% url 'add_comment' post.id %}">
                         {% csrf_token %}
                         <textarea class="form-control mt-2" name="content" placeholder="Add a comment..."></textarea>
@@ -98,14 +92,12 @@
                     </form>
                 </div>
 
-                <!-- Edit/Delete -->
+                <!-- Edit/Delete for Post -->
                 {% if request.user == post.user %}
                     <a href="{% url 'edit_post' post.id %}" class="btn btn-sm btn-secondary">Edit</a>
                     <form method="POST" action="{% url 'delete_post' post.id %}" style="display:inline;">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this post?');">
-                            Delete
-                        </button>
+                        <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this post?');">Delete</button>
                     </form>
                 {% endif %}
             </div>
@@ -114,13 +106,4 @@
         <p>No posts yet for this project.</p>
     {% endfor %}
 </div>
-
-<script>
-function copyToClipboard(link) {
-    navigator.clipboard.writeText(link).then(() => {
-        alert("Link copied to clipboard!");
-    });
-}
-</script>
-
 {% endblock %}
