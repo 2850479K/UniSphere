@@ -344,6 +344,11 @@ def decline_friend_request(request, request_id):
     return JsonResponse({"message": "Friend request declined"})
 
 @login_required
+def friend_requests(request):
+    requests = FriendRequest.objects.filter(to_user=request.user, accepted=False)
+    return render(request, 'UniSphereApp/friend_requests.html', {'request':requests})  
+
+@login_required
 def share_post(request, post_id):
     original_post = get_object_or_404(StudentPost, id=post_id)
 
