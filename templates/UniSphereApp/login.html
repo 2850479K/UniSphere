@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Login - UniSphere{% endblock %}
 
@@ -6,6 +7,13 @@
 <div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
     <div class="card shadow-lg p-4" style="width: 100%; max-width: 400px;">
         <h2 class="text-center mb-4">Login</h2>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-danger">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
         <form method="post">
             {% csrf_token %}
             <div class="mb-3">
@@ -16,8 +24,11 @@
                 <label for="password" class="form-label">Password</label>
                 <input type="password" name="password" id="password" class="form-control" required>
             </div>
+
+            <!-- Fixed: Buttons properly placed inside the form -->
             <button type="submit" class="btn btn-primary w-100">Login</button>
         </form>
+
         <div class="text-center mt-3">
             <p>Don't have an account? <a href="{% url 'register' %}" class="text-decoration-none">Register here</a></p>
         </div>

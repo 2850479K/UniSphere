@@ -12,16 +12,10 @@ from . import views
 urlpatterns = [
     path('', views.home, name='home'),
     path('register/', views.register, name='register'),
-    path('accounts/login/', auth_views.LoginView.as_view(template_name='UniSphereApp/login.html'), name='login'),
+    path('create-profile/', views.create_profile, name='create_profile'),
+    path('edit-profile/', views.edit_profile, name='edit_profile'),
+    path('accounts/login/', views.custom_login, name='login'),
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
-
-    #portfolio URLs
-    path('portfolio/', views.post_list, name='post_list'),# View all projects
-    path('portfolio/createpost/', views.create_post, name='create_post'),  # Create a new project
-    path('portfolio/viewpost/<int:project_id>/', views.view_post, name='view_post'),  # View & edit project
-    path('portfolio/editpost/<int:project_id>/', views.edit_post, name='edit_post'),
-    path('portfolio/deletepost/<int:project_id>/', views.delete_post, name='delete_post'),
-    path('profile/', views.profile, name='profile'),
     path('profile/<str:username>/', views.profile, name='profile'),
     path('profile/', views.my_profile, name='my_profile'),
 
@@ -34,9 +28,9 @@ urlpatterns = [
 
     # Posts
     path('project/<int:project_id>/createpost/', views.create_post, name='create_post'),
-    path('portfolio/viewpost/<int:post_id>/', views.view_post, name='view_post'),
     path('portfolio/editpost/<int:post_id>/', views.edit_post, name='edit_post'),
     path('portfolio/deletepost/<int:post_id>/', views.delete_post, name='delete_post'),
+    path('post/<int:post_id>/comments/all/', views.view_all_comments, name='view_all_comments'),
 
     # Recruiter & Student Search
     path('recruiter/create-profile/', create_recruiter_profile, name='create_recruiter_profile'),
@@ -45,6 +39,20 @@ urlpatterns = [
     path("recruiter/dashboard/", recruiter_dashboard, name="recruiter_dashboard"),
     path('recruiter/invite/<int:student_id>/', invite_student, name='invite_student'),
     path('recruiter/save/<int:student_id>/', save_student, name='save_student'),
+    path('search-students/', views.search_students, name='search_students'),
+
+    # Social Features
+    path('post/<int:post_id>/like/', views.like_post, name='like_post'),
+    path('post/<int:post_id>/share/', views.share_post, name='share_post'),
+    path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
+    path('post/<int:post_id>/comments/', views.get_comments, name='get_comments'),
+    path('post/<int:post_id>/share/', views.share_post, name='share_post'),
+    path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
+
+    # Friend Requests
+    path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
+    path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
+    path('friend-request/decline/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
 ]
 
 

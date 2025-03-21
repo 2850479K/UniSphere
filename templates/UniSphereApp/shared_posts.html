@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Shared Posts</h2>
+
+    {% for shared_post in shared_posts %}
+    <div class="card mb-3">
+        <div class="card-body">
+            <h4>{{ shared_post.original_post.title }}</h4>
+            <p>{{ shared_post.original_post.caption|urlize }}</p>
+
+            <p><strong>Original Poster:</strong> {{ shared_post.original_post.user.username }}</p>
+
+            <!-- Display Uploaded Files -->
+            {% for file in shared_post.original_post.files.all %}
+                {% if file.file.url|lower|slice:'-3:' == "jpg" or file.file.url|lower|slice:'-3:' == "png" %}
+                    <img src="{{ file.file.url }}" class="img-fluid" style="max-width: 500px; height: auto;" alt="Uploaded Image">
+                {% elif file.file.url|lower|slice:'-3:' == "mp4" or file.file.url|lower|slice:'-3:' == "mov" %}
+                    <video controls style="max-width: 500px; height: auto;">
+                        <source src="{{ file.file.url }}" type="video/mp4">
+                    </video>
+                {% else %}
+                    <p><a href="{{ file.file.url }}" download>Download File</a></p>
+                {% endif %}
+            {% endfor %}
+
+            <p><strong>Shared by:</strong> {{ shared_post.user.username }} on {{ shared_post.timestamp }}</p>
+
+            <!-- Like Button -->
+            <form action="{% url 'like_post' shared_post.original_post.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-primary">
+                    Like ({{ shared_post.original_post.likes.count }})
+                </button>
+            </form>
+
+            <!-- Comment Button -->
+            <a href="{% url 'view_all_comments' shared_post.original_post.id %}" class="btn btn-outline-secondary">View Comments</a>
+
+            <!-- Share Button -->
+            <form action="{% url 'share_post' shared_post.original_post.id %}" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-success">Repost</button>
+            </form>
+
+            <!-- Copy Link Button -->
+            <button class="btn btn-outline-info" onclick="copyToClipboard('{{ request.build_absolute_uri }}')">Copy Link</button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+function copyToClipboard(link) {
+    navigator.clipboard.writeText(link).then(() => {
+        alert("Link copied to clipboard!");
+    });
+}
+</script>
+
+{% endblock %}

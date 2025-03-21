@@ -46,6 +46,12 @@ class PostFile(models.Model):
     post = models.ForeignKey(StudentPost, related_name="files", on_delete=models.CASCADE)
     file = models.FileField(upload_to="uploads/")
 
+    def delete(self, *args, **kwargs):
+        if self.file:
+            storage = self.file.storage
+            storage.delete(self.file.name)  
+        super().delete(*args, **kwargs)
+
 # Recruiter & Student Profiles
 class RecruiterProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -72,18 +78,19 @@ class StudentProfile(models.Model):
     full_name = models.CharField(max_length=100, blank=True, default="")
     gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], default="")
     languages = models.CharField(max_length=255, blank=True, default="")
-    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public')  
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public') 
+    full_name = models.CharField(max_length=100, blank=True, null=True)  
+    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
+    school = models.CharField(max_length=255, blank=True, null=True)  
+    bio = models.TextField(blank=True, null=True)  
+    interests = models.TextField(blank=True, null=True)  
+    languages = models.CharField(max_length=255, blank=True, null=True)  
+    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public', help_text="Not shown on profile") 
 
     def get_profile_picture_url(self):
         if self.profile_picture:
             return self.profile_picture.url
         return "/static/images/default_pfp.jpeg"
-
-    def delete_profile_picture(self):
-        if self.profile_picture and os.path.isfile(self.profile_picture.path):
-            os.remove(self.profile_picture.path)
-        self.profile_picture = None
-        self.save()
 
     def __str__(self):
         return self.user.username
@@ -97,3 +104,40 @@ class Invitation(models.Model):
     def __str__(self):
         return f"Invitation from {self.recruiter.username} to {self.student.user.username}"
 
+
+# Social Features
+class Comment(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="comments")
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} commented on {self.post.title[:30]}"
+
+class Like(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="likes")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class Share(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shares")
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class FriendRequest(models.Model):
+    from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_requests", on_delete=models.CASCADE)
+    to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="received_requests", on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Friend Request from {self.from_user.username} to {self.to_user.username}"
+
+class SharedPost(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  
+    original_post = models.ForeignKey(StudentPost, on_delete=models.CASCADE, related_name="shared_posts")  
+    timestamp = models.DateTimeField(auto_now_add=True)  
+
+    def __str__(self):
+        return f"{self.user.username} shared {self.original_post.title}"

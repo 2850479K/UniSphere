@@ -6,6 +6,13 @@
 <div class="container mt-4">
     <div class="card shadow p-4">
         <h1 class="mb-3">Edit Project</h1>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-success">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
         <form method="POST">
             {% csrf_token %}
 

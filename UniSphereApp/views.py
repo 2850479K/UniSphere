@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
@@ -11,11 +11,12 @@ from django.shortcuts import get_object_or_404
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm
 from django.contrib import messages
+from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
 
 User = get_user_model()
 
 # Authentication
-
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
@@ -30,10 +31,51 @@ def register(request):
             user = form.save(commit=False)
             user.role = form.cleaned_data['role']
             user.save()
-            return redirect('login')
+
+            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])  
+            if user is not None:
+                login(request, user)  
+                return redirect('create_profile')
     else:
         form = UserRegisterForm()
+
     return render(request, 'UniSphereApp/register.html', {'form': form})
+
+def custom_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+
+        if user is not None:
+            login(request, user)
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # AJAX request
+                return JsonResponse({"message": "Login successful!", "redirect": "my_profile"}, status=200)
+            messages.success(request, "You have successfully logged in.")
+            return redirect('my_profile')
+        else:
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
+                return JsonResponse({"error": "Invalid username or password."}, status=400)
+            messages.error(request, "Invalid username or password.")
+
+    return render(request, 'UniSphereApp/login.html')
+
+@login_required
+def create_profile(request):
+    profile, created = StudentProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CreateProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile created successfully!")
+            return redirect('profile', username=request.user.username)
+        else:
+            messages.error(request, "Error creating profile. Please check the form.")
+    else:
+        form = CreateProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
@@ -46,32 +88,19 @@ def profile(request, username):
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
-    if request.method == "POST" and is_owner:
-        form = StudentProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            if request.POST.get("delete_picture"):  
-                profile.delete_profile_picture()  
-            form.save()
-            messages.success(request, "Profile updated successfully!")
-            return redirect('profile', username=profile_user.username)
-    else:
-        form = StudentProfileForm(instance=profile)
-
     return render(
         request, 
         "UniSphereApp/profile.html", 
         {
-            "form": form, 
             "profile": profile, 
             "projects": projects,  
             "profile_user": profile_user, 
-            "is_owner": is_owner
+            "is_owner": is_owner,
         }
     )
 
 @login_required
 def my_profile(request):
-    """Redirects the user to their own profile page."""
     return redirect('profile', username=request.user.username)
 
 # Portfolio & Projects
@@ -95,6 +124,8 @@ def create_project(request):
             project.save()
             messages.success(request, "Project created successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error creating project. Please check the form.")
 
     else:
         form = ProjectForm()
@@ -113,8 +144,11 @@ def edit_project(request, project_id):
         form = ProjectForm(request.POST, instance=project)
         if form.is_valid():
             form.save()
-            messages.success(request, "Project updated successfully.")
+            messages.success(request, "Project updated successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error updating project. Please check the form.")
+
     else:
         form = ProjectForm(instance=project)
 
@@ -130,13 +164,12 @@ def delete_project(request, project_id):
 
     if request.method == "POST":
         project.delete()
-        messages.success(request, "Project successfully deleted.")
+        messages.success(request, "Project deleted successfully!")
         return redirect('user_portfolio', username=request.user.username)
 
     return redirect('project', project_id=project.id)
 
 # Posts
-
 @login_required
 def create_post(request, project_id):
     project = get_object_or_404(Project, id=project_id)
@@ -154,18 +187,16 @@ def create_post(request, project_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post added successfully.")
+            messages.success(request, "Post added successfully!")
             return redirect('project', project_id=project.id)
+        else:
+            messages.error(request, "Error adding post. Please check the form.")
 
     else:
         form = StudentPostForm()
 
     return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
 
-@login_required
-def view_post(request, post_id):
-    post = get_object_or_404(StudentPost, id=post_id)
-    return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
 @login_required
 def edit_post(request, post_id):
@@ -188,8 +219,10 @@ def edit_post(request, post_id):
             for file in files:
                 PostFile.objects.create(post=post, file=file)
 
-            messages.success(request, "Post updated successfully.")
+            messages.success(request, "Post updated successfully!")
             return redirect('project', project_id=post.project.id)
+        else:
+            messages.error(request, "Error updating post. Please check the form.")
 
     else:
         form = StudentPostForm(instance=post)
@@ -207,10 +240,11 @@ def delete_post(request, post_id):
 
     if request.method == "POST":
         post.delete()
-        messages.success(request, "Post successfully deleted.")
+        messages.success(request, "Post deleted successfully!")
         return redirect('project', project_id=post.project.id)
 
     return redirect('project', project_id=post.project.id)
+
 
 # Recruiter Profile & Student Search
 
@@ -239,11 +273,11 @@ def create_recruiter_profile(request):
     return render(request, "recruiter/create_profile.html", {"form": form})
 
 
-
 @login_required
 def check_profile(request):
     profile_exists = RecruiterProfile.objects.filter(user=request.user).exists()
     return JsonResponse({"exists": profile_exists})
+
 
 def search_students(request):
     form = StudentSearchForm(request.GET)
@@ -262,10 +296,6 @@ def search_students(request):
             students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
     return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
-
-@login_required
-def profile(request):
-    return render(request, 'UniSphereApp/profile.html')
 
 @login_required
 def recruiter_dashboard(request):
@@ -306,3 +336,80 @@ def save_student(request, student_id):
 
     recruiter.saved_students.add(student)
     return JsonResponse({"message": "Student Saved", "status": "saved"})
+
+# Social Features
+@login_required
+def get_comments(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    comments = post.comments.order_by('-created_at')[:5]  
+    comments_data = [
+        {"username": c.user.username, "content": c.content, "created_at": c.created_at.strftime('%Y-%m-%d %H:%M')}
+        for c in comments
+    ]
+    return JsonResponse({"comments": comments_data})
+
+@login_required
+def like_post(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+
+    existing_like = Like.objects.filter(user=request.user, post=post)
+    if existing_like.exists():
+        existing_like.delete()
+    else:
+        Like.objects.create(user=request.user, post=post)
+
+    return redirect('project', project_id=post.project.id)
+
+@login_required
+def add_comment(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+
+    if request.method == "POST":
+        content = request.POST.get("content", "").strip()
+        if content:
+            Comment.objects.create(user=request.user, post=post, content=content)
+
+    return redirect('project', project_id=post.project.id)
+
+@login_required
+def view_all_comments(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    comments = post.comments.all().order_by('-created_at')
+    return render(request, 'UniSphereApp/all_comments.html', {'post': post, 'comments': comments})
+
+@login_required
+def send_friend_request(request, user_id):
+    to_user = get_object_or_404(User, id=user_id)
+    if request.user != to_user:
+        FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+    return JsonResponse({"message": "Friend request sent"})
+
+@login_required
+def accept_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.accepted = True
+    friend_request.save()
+    return JsonResponse({"message": "Friend request accepted"})
+
+@login_required
+def decline_friend_request(request, request_id):
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
+    friend_request.delete()
+    return JsonResponse({"message": "Friend request declined"})
+
+@login_required
+def share_post(request, post_id):
+    original_post = get_object_or_404(StudentPost, id=post_id)
+
+    if SharedPost.objects.filter(user=request.user, original_post=original_post).exists():
+        messages.warning(request, "You have already shared this post.")
+    else:
+        SharedPost.objects.create(user=request.user, original_post=original_post)
+        messages.success(request, "Post shared successfully!")
+
+    return redirect('shared_posts_list')
+
+@login_required
+def shared_posts_list(request):
+    shared_posts = SharedPost.objects.filter(user=request.user).order_by('-timestamp')
+    return render(request, 'UniSphereApp/shared_posts.html', {'shared_posts': shared_posts})
