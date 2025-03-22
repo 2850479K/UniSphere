@@ -10,9 +10,23 @@ from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
-# Authentication
 def home(request):
-    return render(request, 'UniSphereApp/home.html')
+    # Get all public posts
+    public_posts = StudentPost.objects.filter(user__studentprofile__visibility='public')
+
+    if request.user.is_authenticated:
+        friends = get_friends(request.user)
+        # Get private posts from friends (users with StudentProfile.visibility == 'private')
+        private_posts = StudentPost.objects.filter(
+            user__studentprofile__visibility='private',
+            user__in=friends
+        )
+        # Combine public and private posts; union() requires similar QuerySets.
+        posts = public_posts.union(private_posts).order_by('-timestamp')
+    else:
+        posts = public_posts.order_by('-timestamp')
+
+    return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
 def register(request):
     if request.method == 'POST':
@@ -50,6 +64,12 @@ def custom_login(request):
 
     return render(request, 'UniSphereApp/login.html')
 
+def profile_posts(request, username):
+    user = get_object_or_404(User, username=username)
+    posts = StudentPost.objects.filter(user=user).order_by('-timestamp')
+    # Ensure you have a template at UniSphereApp/profile_posts.html
+    return render(request, 'UniSphereApp/profile_posts.html', {'profile': user.studentprofile, 'posts': posts})
+
 @login_required
 def create_profile(request):
     profile, created = StudentProfile.objects.get_or_create(user=request.user)
@@ -71,22 +91,26 @@ def create_profile(request):
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, created = StudentProfile.objects.get_or_create(user=profile_user)
-    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5] 
+    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
 
-    is_owner = request.user == profile_user  
+    is_owner = (request.user == profile_user)
 
-
+    # If profile is private and current user isn't the owner, show a limited view
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
+    # Get up to 6 most recent posts by this user
+    recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
+
     return render(
-        request, 
-        "UniSphereApp/profile.html", 
+        request,
+        "UniSphereApp/profile.html",
         {
-            "profile": profile, 
-            "projects": projects,  
-            "profile_user": profile_user, 
+            "profile": profile,
+            "projects": projects,
+            "profile_user": profile_user,
             "is_owner": is_owner,
+            "recent_posts": recent_posts,  # Pass this to display in the template
         }
     )
 
@@ -193,27 +217,31 @@ def delete_project(request, project_id):
 
 # Posts
 @login_required
-def create_post(request, project_id):
-    project = get_object_or_404(Project, id=project_id)
+def create_post(request, project_id=None):
+    """
+    Create a new post.
+    If project_id is provided, the post is created under that project.
+    If not, the post is created as a profile post (project is set to None).
+    """
+    project = get_object_or_404(Project, id=project_id) if project_id else None
 
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES)
         files = request.FILES.getlist('files')
-
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
-            post.project = project
+            post.project = project  # Will be None for profile posts
             post.save()
-
             for file in files:
                 PostFile.objects.create(post=post, file=file)
-
             messages.success(request, "Post added successfully!")
-            return redirect('project', project_id=project.id)
+            if project:
+                return redirect('project', project_id=project.id)
+            else:
+                return redirect('profile', username=request.user.username)
         else:
             messages.error(request, "Error adding post. Please check the form.")
-
     else:
         form = StudentPostForm()
 
@@ -267,6 +295,12 @@ def delete_post(request, post_id):
 
     return redirect('project', project_id=post.project.id)
 
+
+def view_post(request, post_id):
+    post = get_object_or_404(StudentPost, id=post_id)
+    # Render a template that shows the full post details.
+    return render(request, 'UniSphereApp/view_post.html', {'post': post})
+
 def search_students(request):
     form = StudentSearchForm(request.GET)
     students = StudentProfile.objects.all()
@@ -296,17 +330,12 @@ def get_comments(request, post_id):
     ]
     return JsonResponse({"comments": comments_data})
 
-# @login_required
-# def like_post(request, post_id):
-#     post = get_object_or_404(StudentPost, id=post_id)
-#
-#     existing_like = Like.objects.filter(user=request.user, post=post)
-#     if existing_like.exists():
-#         existing_like.delete()
-#     else:
-#         Like.objects.create(user=request.user, post=post)
-#
-#     return redirect('project', project_id=post.project.id)
+
+def get_friends(user):
+    sent = FriendRequest.objects.filter(from_user=user, accepted=True).values_list('to_user', flat=True)
+    received = FriendRequest.objects.filter(to_user=user, accepted=True).values_list('from_user', flat=True)
+    friend_ids = list(sent) + list(received)
+    return User.objects.filter(id__in=friend_ids)
 
 @require_POST
 @login_required

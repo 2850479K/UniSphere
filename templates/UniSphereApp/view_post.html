@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Post - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Post Header -->
+        <h2>{{ post.title }}</h2>
+        <p><strong>By:</strong> {{ post.user.username }}</p>
+        <p><strong>Posted on:</strong> {{ post.timestamp|date:"M j, Y" }}</p>
+        <p>{{ post.caption }}</p>
+
+        <!-- Display Post Files/Images -->
+        {% for file in post.files.all %}
+            {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                <img src="{{ file.file.url }}" class="img-fluid my-3" alt="Post image">
+            {% endif %}
+        {% endfor %}
+
+        <!-- Social Buttons -->
+        <div class="d-flex align-items-center gap-3 my-3">
+            <!-- AJAX-Enabled Like Button -->
+            <button type="button"
+                    class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
+                    data-post-id="{{ post.id }}">
+                {% if request.user in post.likes.all %}
+                    <span class="heart liked">❤</span>
+                {% else %}
+                    <span class="heart">♡</span>
+                {% endif %}
+                <span class="like-count">({{ post.likes.count }})</span>
+            </button>
+
+            <!-- Share Buttons -->
+            <div class="btn-group">
+                <form method="POST" action="{% url 'share_post' post.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-secondary">Repost</button>
+                </form>
+                <button class="btn btn-outline-info" onclick="copyToClipboard('{{ request.build_absolute_uri }}')">Copy Link</button>
+            </div>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="mt-4">
+            <h5>Comments</h5>
+            {% for comment in post.comments.all|dictsortreversed:"created_at"|slice:":5" %}
+                <p><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</p>
+            {% endfor %}
+            <a href="{% url 'view_all_comments' post.id %}" class="btn btn-link">View All Comments</a>
+
+            <!-- Comment Input Form -->
+            <form method="POST" action="{% url 'add_comment' post.id %}">
+                {% csrf_token %}
+                <textarea class="form-control mt-2" name="content" placeholder="Add a comment..."></textarea>
+                <button type="submit" class="btn btn-sm btn-primary mt-2">Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

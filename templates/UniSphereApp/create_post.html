@@ -1,34 +1,19 @@
-
 {% extends 'base.html' %}
+{% load static %}
 
-{% block title %}Create Post - UniSphere{% endblock %}
+{% block title %}
+  {% if project %}Create Project Post - UniSphere{% else %}Create Profile Post - UniSphere{% endif %}
+{% endblock %}
 
 {% block content %}
-<div class="container mt-5 d-flex justify-content-center">
-    <div class="card shadow p-5 rounded-4 edit-profile-card">
-        <h2 class="text-center mb-4 fw-bold text-primary">Create a New Post for "{{ project.title }}"</h2>
-
-        <form method="POST" enctype="multipart/form-data" class="custom-form">
-            {% csrf_token %}
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Post Title:</label>
-                {{ form.title }}
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Caption:</label>
-                {{ form.caption }}
-            </div>
-
-            <div class="mb-4">
-                <label class="form-label fw-semibold">Attach Files:</label>
-                {{ form.files }}
-            </div>
-
-            <button type="submit" class="btn btn-success w-100 rounded-3">Upload</button>
-        </form>
-
-        <a href="{% url 'project' project.id %}" class="btn btn-secondary w-100 rounded-3 mt-3">Back to Project</a>
-    </div>
+<div class="container mt-5" style="max-width: 600px; margin: auto;">
+    <h2 class="mb-4 text-center">
+      {% if project %}Create Post for {{ project.title }}{% else %}Create New Post{% endif %}
+    </h2>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-success w-100">Post</button>
+    </form>
 </div>
 {% endblock %}

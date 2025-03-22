@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ profile.user.username }}'s Posts - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <!-- Create New Post Button (visible only to profile owner) -->
+    {% if request.user == profile.user %}
+    <div class="text-center mb-3">
+        <a href="{% url 'create_profile_post' %}" class="btn btn-success">Create New Post</a>
+    </div>
+    {% endif %}
+
+    <h2 class="text-center mb-4">{{ profile.user.username }}'s Posts</h2>
+    <div class="row">
+        {% for post in posts %}
+        <div class="col-md-4 mb-3">
+            <a href="{% url 'view_post' post.id %}" class="text-decoration-none text-reset">
+                <div class="card shadow-sm">
+                    {% if post.files.all %}
+                        {% for file in post.files.all|slice:":1" %}
+                            {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                                <img src="{{ file.file.url }}" class="card-img-top" alt="Post image">
+                            {% else %}
+                                <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                            {% endif %}
+                        {% endfor %}
+                    {% else %}
+                        <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                    {% endif %}
+                    <div class="card-body p-2">
+                        <p class="card-text">{{ post.caption|truncatechars:100 }}</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <p class="text-center text-muted">No posts available.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

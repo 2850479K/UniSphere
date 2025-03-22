@@ -1,8 +1,61 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Home - UniSphere{% endblock %}
 
 {% block content %}
-    <h1>Welcome to UniSphere</h1>
-    <p><a href="{% url 'register' %}">Register</a> | <a href="{% url 'login' %}">Login</a></p>
+<div class="container my-4 feed-container">
+    <!-- Create Post Button for logged-in users -->
+    {% if request.user.is_authenticated and request.user.project_set.all %}
+    <div class="mb-3">
+        <a href="{% url 'create_post' request.user.project_set.first.id %}" class="btn btn-success">Create Post</a>
+    </div>
+    {% endif %}
+
+    {% for post in posts %}
+    <div class="post-card">
+        <!-- Post Header -->
+        <div class="post-header">
+            <div class="profile-pic-wrapper">
+                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}" alt="Profile Picture" class="profile-pic">
+            </div>
+            <div class="ms-2">
+                <span class="fw-bold">{{ post.user.username }}</span><br>
+                <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
+            </div>
+        </div>
+
+        <!-- Post Image (if available) -->
+        {% if post.image %}
+        <div class="post-image-wrapper">
+            <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
+        </div>
+        {% endif %}
+
+        <!-- Post Body -->
+        <div class="post-body">
+            <p class="post-caption">
+                <span class="fw-semibold">{{ post.user.username }}</span> {{ post.caption }}
+            </p>
+            <div class="d-flex align-items-center gap-3">
+                <!-- AJAX-Enabled Like Button -->
+                <button type="button"
+                        class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
+                        data-post-id="{{ post.id }}">
+                    {% if request.user in post.likes.all %}
+                        <span class="heart liked">❤</span>
+                    {% else %}
+                        <span class="heart">♡</span>
+                    {% endif %}
+                    <span class="like-count">({{ post.likes.count }})</span>
+                </button>
+                <button class="btn btn-sm btn-outline-secondary">Comment</button>
+                <button class="btn btn-sm btn-outline-secondary">Share</button>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <p>No posts yet. Follow someone or create a post to see them here!</p>
+    {% endfor %}
+</div>
 {% endblock %}

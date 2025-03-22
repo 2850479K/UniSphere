@@ -27,7 +27,7 @@ class Project(models.Model):
         return f"{self.user.username} - {self.title}"
 
 class StudentPost(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="posts")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     caption = models.TextField()

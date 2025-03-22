@@ -12,6 +12,7 @@ urlpatterns = [
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
     path('profile/<str:username>/', views.profile, name='profile'),
     path('profile/', views.my_profile, name='my_profile'),
+    path('profile/<str:username>/posts/', views.profile_posts, name='profile_posts'),
 
     # Portfolio & Projects
     path('portfolio/create_project/', views.create_project, name='create_project'),
@@ -25,12 +26,13 @@ urlpatterns = [
     path('portfolio/editpost/<int:post_id>/', views.edit_post, name='edit_post'),
     path('portfolio/deletepost/<int:post_id>/', views.delete_post, name='delete_post'),
     path('post/<int:post_id>/comments/all/', views.view_all_comments, name='view_all_comments'),
+    path('post/<int:post_id>/', views.view_post, name='view_post'),
+    path('create_profile_post/', views.create_post, name='create_profile_post'),
 
     # Recruiter & Student Search
     path('search-students/', views.search_students, name='search_students'),
 
     # Social Features
-    # path('post/<int:post_id>/like/', views.like_post, name='like_post'),
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('post/<int:post_id>/comments/', views.get_comments, name='get_comments'),

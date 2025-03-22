@@ -1,12 +1,12 @@
 document.addEventListener("DOMContentLoaded", function () {
-    // Copy to clipboard
+    // Copy to clipboard function
     window.copyToClipboard = function (link) {
         navigator.clipboard.writeText(link).then(() => {
             alert("Link copied to clipboard!");
         });
     };
 
-    // Like button AJAX handler
+    // AJAX handler for like button
     document.querySelectorAll(".like-button").forEach((btn) => {
         btn.addEventListener("click", () => {
             const postId = btn.getAttribute("data-post-id");
@@ -23,7 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 const heartSpan = btn.querySelector(".heart");
                 const countSpan = btn.querySelector(".like-count");
 
-                // Update heart symbol
+                // Update heart symbol and style
                 if (data.liked) {
                     heartSpan.textContent = "❤";
                     heartSpan.classList.add("liked");
@@ -42,7 +42,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // CSRF helper
+    // CSRF helper function
     function getCSRFToken() {
         const cookie = document.cookie.split(";").find(cookie => cookie.trim().startsWith("csrftoken="));
         return cookie ? cookie.split("=")[1] : "";
