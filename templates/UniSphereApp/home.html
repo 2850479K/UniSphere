@@ -5,37 +5,51 @@
 
 {% block content %}
 <div class="container my-4 feed-container">
-    <!-- Create Post Button for logged-in users -->
-    {% if request.user.is_authenticated and request.user.project_set.all %}
+    <!-- Create Post Button for logged-in users (profile posts) -->
+    {% if request.user.is_authenticated %}
     <div class="mb-3">
-        <a href="{% url 'create_post' request.user.project_set.first.id %}" class="btn btn-success">Create Post</a>
+        <a href="{% url 'create_profile_post' %}" class="btn btn-success">Create Post</a>
     </div>
     {% endif %}
 
     {% for post in posts %}
-    <div class="post-card">
+    <div class="post-card mb-4">
         <!-- Post Header -->
-        <div class="post-header">
+        <div class="post-header d-flex align-items-center mb-2">
             <div class="profile-pic-wrapper">
-                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}" alt="Profile Picture" class="profile-pic">
+                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}"
+                     alt="Profile Picture"
+                     class="profile-pic"
+                     style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
             </div>
             <div class="ms-2">
-                <span class="fw-bold">{{ post.user.username }}</span><br>
+                <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
+                    {{ post.user.username }}
+                </a><br>
                 <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
             </div>
         </div>
 
-        <!-- Post Image (if available) -->
-        {% if post.image %}
-        <div class="post-image-wrapper">
-            <img src="{{ post.image.url }}" alt="Post Image" class="post-image">
+        <!-- Post Thumbnail (if available) -->
+        {% if post.files.all %}
+        <div class="post-thumbnail mb-2">
+            {% for file in post.files.all|slice:":1" %}
+                {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                    <a href="{% url 'view_post' post.id %}">
+                        <img src="{{ file.file.url }}" alt="Post Image" style="width:100%; max-height:200px; object-fit:cover;">
+                    </a>
+                {% endif %}
+            {% endfor %}
         </div>
         {% endif %}
 
         <!-- Post Body -->
         <div class="post-body">
             <p class="post-caption">
-                <span class="fw-semibold">{{ post.user.username }}</span> {{ post.caption }}
+                <a href="{% url 'profile' post.user.username %}" class="fw-semibold text-decoration-none text-reset">
+                    {{ post.user.username }}
+                </a>
+                {{ post.caption }}
             </p>
             <div class="d-flex align-items-center gap-3">
                 <!-- AJAX-Enabled Like Button -->
@@ -49,7 +63,8 @@
                     {% endif %}
                     <span class="like-count">({{ post.likes.count }})</span>
                 </button>
-                <button class="btn btn-sm btn-outline-secondary">Comment</button>
+                <!-- Comment button navigates to full post view -->
+                <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
                 <button class="btn btn-sm btn-outline-secondary">Share</button>
             </div>
         </div>

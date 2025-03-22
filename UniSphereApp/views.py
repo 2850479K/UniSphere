@@ -10,22 +10,28 @@ from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
+# def home(request):
+#     # Get all public posts
+#     public_posts = StudentPost.objects.filter(user__studentprofile__visibility='public')
+#
+#     if request.user.is_authenticated:
+#         friends = get_friends(request.user)
+#         # Get private posts from friends (users with StudentProfile.visibility == 'private')
+#         private_posts = StudentPost.objects.filter(
+#             user__studentprofile__visibility='private',
+#             user__in=friends
+#         )
+#         # Combine public and private posts; union() requires similar QuerySets.
+#         posts = public_posts.union(private_posts).order_by('-timestamp')
+#     else:
+#         posts = public_posts.order_by('-timestamp')
+#
+#     return render(request, 'UniSphereApp/home.html', {'posts': posts})
+
 def home(request):
-    # Get all public posts
-    public_posts = StudentPost.objects.filter(user__studentprofile__visibility='public')
-
-    if request.user.is_authenticated:
-        friends = get_friends(request.user)
-        # Get private posts from friends (users with StudentProfile.visibility == 'private')
-        private_posts = StudentPost.objects.filter(
-            user__studentprofile__visibility='private',
-            user__in=friends
-        )
-        # Combine public and private posts; union() requires similar QuerySets.
-        posts = public_posts.union(private_posts).order_by('-timestamp')
-    else:
-        posts = public_posts.order_by('-timestamp')
-
+    posts = StudentPost.objects.filter(
+        Q(project__isnull=True) | Q(project__isnull=False, user__studentprofile__visibility='public')
+    ).order_by('-timestamp')
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
 def register(request):

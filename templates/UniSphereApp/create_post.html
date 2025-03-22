@@ -2,18 +2,37 @@
 {% load static %}
 
 {% block title %}
-  {% if project %}Create Project Post - UniSphere{% else %}Create Profile Post - UniSphere{% endif %}
+  {% if project %}Create Post for {{ project.title }}{% else %}Create New Post{% endif %} - UniSphere
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5" style="max-width: 600px; margin: auto;">
-    <h2 class="mb-4 text-center">
+<div class="container mt-5">
+  <div class="card shadow-lg rounded p-4 mx-auto" style="max-width: 600px;">
+    <h2 class="card-title text-center mb-4">
       {% if project %}Create Post for {{ project.title }}{% else %}Create New Post{% endif %}
     </h2>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-success w-100">Post</button>
+    <form method="POST" enctype="multipart/form-data" class="custom-form">
+      {% csrf_token %}
+      <div class="mb-3">
+        <label for="id_title" class="form-label">Title</label>
+        {{ form.title }}
+        {% if form.title.errors %}
+          <div class="text-danger small">{{ form.title.errors }}</div>
+        {% endif %}
+      </div>
+      <div class="mb-3">
+        <label for="id_caption" class="form-label">Caption</label>
+        {{ form.caption }}
+        {% if form.caption.errors %}
+          <div class="text-danger small">{{ form.caption.errors }}</div>
+        {% endif %}
+      </div>
+      <div class="mb-4">
+        <label for="id_files" class="form-label">Attach Files</label>
+        <input type="file" name="files" id="id_files" class="form-control" multiple>
+      </div>
+      <button type="submit" class="btn btn-primary w-100 py-2 rounded">Post</button>
     </form>
+  </div>
 </div>
 {% endblock %}

@@ -7,12 +7,25 @@
 <div class="container mt-5">
     <div class="card shadow-lg p-4">
         <!-- Post Header -->
+        <div class="d-flex align-items-center mb-3">
+            <div class="profile-pic-wrapper" style="width:50px; height:50px; border-radius:50%; overflow:hidden; margin-right:10px;">
+                <a href="{% url 'profile' post.user.username %}">
+                    <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}" class="img-fluid" alt="{{ post.user.username }}'s profile picture">
+                </a>
+            </div>
+            <div>
+                <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
+                    {{ post.user.username }}
+                </a>
+                <br>
+                <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
+            </div>
+        </div>
+
         <h2>{{ post.title }}</h2>
-        <p><strong>By:</strong> {{ post.user.username }}</p>
-        <p><strong>Posted on:</strong> {{ post.timestamp|date:"M j, Y" }}</p>
         <p>{{ post.caption }}</p>
 
-        <!-- Display Post Files/Images -->
+        <!-- Display Post Images -->
         {% for file in post.files.all %}
             {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
                 <img src="{{ file.file.url }}" class="img-fluid my-3" alt="Post image">
@@ -32,15 +45,9 @@
                 {% endif %}
                 <span class="like-count">({{ post.likes.count }})</span>
             </button>
-
-            <!-- Share Buttons -->
-            <div class="btn-group">
-                <form method="POST" action="{% url 'share_post' post.id %}">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-secondary">Repost</button>
-                </form>
-                <button class="btn btn-outline-info" onclick="copyToClipboard('{{ request.build_absolute_uri }}')">Copy Link</button>
-            </div>
+            <!-- Comment Button -->
+            <a href="{% url 'view_all_comments' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
+            <button class="btn btn-sm btn-outline-secondary">Share</button>
         </div>
 
         <!-- Comments Section -->
@@ -50,8 +57,6 @@
                 <p><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</p>
             {% endfor %}
             <a href="{% url 'view_all_comments' post.id %}" class="btn btn-link">View All Comments</a>
-
-            <!-- Comment Input Form -->
             <form method="POST" action="{% url 'add_comment' post.id %}">
                 {% csrf_token %}
                 <textarea class="form-control mt-2" name="content" placeholder="Add a comment..."></textarea>
