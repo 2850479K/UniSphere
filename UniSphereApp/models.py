@@ -53,13 +53,24 @@ class PostFile(models.Model):
         super().delete(*args, **kwargs)
 
 # Recruiter & Student Profiles
+def profile_picture_upload_path(instance, filename):
+    return f"profile_pictures/{instance.user.username}/{filename}"
+
 class RecruiterProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
+    full_name = models.CharField(max_length=100, blank=True, default="")
     company_name = models.CharField(max_length=255, blank=False, null=False)
     industry = models.CharField(max_length=100, blank=False, null=False)
-    company_description = models.TextField(blank=False, null=False,default="Not provided")
-    location = models.CharField(max_length=255,blank=False, null=False,default="Not provided")
-    company_website = models.URLField(blank=False, null=False,default="Not provided")
+    company_description = models.TextField(blank=False, null=False)
+    location = models.CharField(max_length=255,blank=False, null=False)
+    company_website = models.URLField(blank=False, null=False)
+    saved_students = models.ManyToManyField('StudentProfile', related_name='saved_by_recruiters', blank=True)
+
+    def get_profile_picture_url(self):
+        if self.profile_picture:
+            return self.profile_picture.url
+        return "/static/images/default_pfp.jpeg"
 
     def __str__(self):
         return self.company_name
@@ -77,10 +88,6 @@ class StudentProfile(models.Model):
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, default="")
     gender = models.CharField(max_length=10, blank=True, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], default="")
-    languages = models.CharField(max_length=255, blank=True, default="")
-    visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public') 
-    full_name = models.CharField(max_length=100, blank=True, null=True)  
-    gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
     school = models.CharField(max_length=255, blank=True, null=True)  
     bio = models.TextField(blank=True, null=True)  
     interests = models.TextField(blank=True, null=True)  
@@ -95,11 +102,10 @@ class StudentProfile(models.Model):
     def __str__(self):
         return self.user.username
 
-class Invitation(models.Model):
-    recruiter = models.ForeignKey(User, on_delete=models.CASCADE, related_name='sent_invitations')
-    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE, related_name='received_invitations')
-    status = models.CharField(max_length=20, choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('declined', 'Declined')], default='pending')
-    sent_at = models.DateTimeField(auto_now_add=True)
+class ContactRecord(models.Model):
+    recruiter = models.ForeignKey(User, on_delete=models.CASCADE)
+    student = models.ForeignKey(StudentProfile, on_delete=models.CASCADE)
+    contacted_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Invitation from {self.recruiter.username} to {self.student.user.username}"

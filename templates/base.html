@@ -41,6 +41,12 @@
             </div>
             <div class="col-md-4 text-end">
                 {% if user.is_authenticated %}
+                    {% if user.role == "recruiter" %}
+                        <a href="{% url 'recruiter_dashboard' %}" class="btn btn-warning me-2">Dashboard</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.recruiterprofile %}
+                        <a href="{% url 'saved_students' %}" class="btn btn-light">Saved</a>
+                    {% endif %}
                     <a href="{% url 'profile' user.username %}" class="btn btn-light">Profile</a>
                     <a href="{% url 'logout' %}" class="btn btn-danger">Logout</a>
                 {% else %}

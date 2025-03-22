@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import StudentProfile
 from .forms import StudentSearchForm
-from .models import Invitation, StudentProfile
+from .models import ContactRecord, StudentProfile
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile
@@ -13,16 +13,15 @@ from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProf
 from django.contrib import messages
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
+from .forms import CreateBasicRecruiterProfileForm
+from django.http import HttpResponseForbidden
+
 
 User = get_user_model()
 
 # Authentication
 def home(request):
     return render(request, 'UniSphereApp/home.html')
-
-def post_list(request):
-    posts = StudentPost.objects.all().order_by('-timestamp')
-    return render(request, 'UniSphereApp/post_list.html', {'posts': posts})
 
 def register(request):
     if request.method == 'POST':
@@ -34,8 +33,16 @@ def register(request):
 
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])  
             if user is not None:
-                login(request, user)  
-                return redirect('create_profile')
+                login(request, user)
+                if user.role == 'recruiter':
+                    existing_profile = RecruiterProfile.objects.filter(user=user).first()
+                    if existing_profile:
+                        return redirect('profile', username=user.username)
+                    else:
+                        return redirect('create_recruiter_profile')
+                else:
+                    return redirect('create_profile')
+
     else:
         form = UserRegisterForm()
 
@@ -49,12 +56,19 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
+
+            if user.role == 'recruiter':
+                existing_profile = RecruiterProfile.objects.filter(user=user).first()
+                if not existing_profile:
+                    return redirect("/recruiter/create-profile/")
+                return redirect(f"/profile/{user.username}/")
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # AJAX request
                 return JsonResponse({"message": "Login successful!", "redirect": "my_profile"}, status=200)
             messages.success(request, "You have successfully logged in.")
             return redirect('my_profile')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"error": "Invalid username or password."}, status=400)
             messages.error(request, "Invalid username or password.")
 
@@ -103,9 +117,31 @@ def profile(request, username):
 def my_profile(request):
     return redirect('profile', username=request.user.username)
 
+
+@login_required
+def edit_profile(request):
+    profile = get_object_or_404(StudentProfile, user=request.user)
+
+    if request.method == 'POST':
+        form = StudentProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            if request.POST.get("delete_picture"):
+                profile.profile_picture.delete()
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect('profile', username=request.user.username)
+    else:
+        form = StudentProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/edit_profile.html', {'form': form})
+
 # Portfolio & Projects
 def user_portfolio(request, username):
     profile_user = get_object_or_404(User, username=username)
+
+    if profile_user.studentprofile.visibility != 'public' and not request.user.is_staff:
+        return HttpResponseForbidden("You do not have permission to view this profile.")
+
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
     return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
 
@@ -253,77 +289,108 @@ def create_recruiter_profile(request):
     existing_profile = RecruiterProfile.objects.filter(user=request.user).first()
 
     if request.method == "POST":
-        if existing_profile:
-            messages.warning(request, "One ID can only create one profile!")
-            return redirect("create_recruiter_profile")
-
         form = RecruiterProfileForm(request.POST, request.FILES)
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
             profile.save()
             messages.success(request, "Successfully created profile!")
-            return redirect("create_recruiter_profile")
+            return redirect(f"/recruiter/profile/{request.user.username}/")
         else:
             messages.error(request, "Please fill in all required fields!")
 
     else:
-        form = RecruiterProfileForm(instance=existing_profile)
+        form = RecruiterProfileForm()
 
     return render(request, "recruiter/create_profile.html", {"form": form})
 
+@login_required
+def create_recruiter_profile(request):
+    profile, created = RecruiterProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CreateBasicRecruiterProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Basic recruiter profile saved!")
+            return redirect('recruiter_profile', username=request.user.username)
+    else:
+        form = CreateBasicRecruiterProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+
 
 @login_required
-def check_profile(request):
-    profile_exists = RecruiterProfile.objects.filter(user=request.user).exists()
-    return JsonResponse({"exists": profile_exists})
+def edit_recruiter_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
 
+    if request.user != profile_user or request.user.role != 'recruiter':
+        messages.error(request, "You are not allowed to edit this profile.")
+        return redirect('/')
 
-def search_students(request):
-    form = StudentSearchForm(request.GET)
-    students = StudentProfile.objects.all()
+    recruiter_profile = get_object_or_404(RecruiterProfile, user=profile_user)
 
-    if form.is_valid():
-        if form.cleaned_data.get('name'):
-            students = students.filter(user__username__icontains=form.cleaned_data['name'])
-        if form.cleaned_data.get('school'):
-            students = students.filter(school__icontains=form.cleaned_data['school'])
-        if form.cleaned_data.get('course'):
-            students = students.filter(course__icontains=form.cleaned_data['course'])
-        if form.cleaned_data.get('interests'):
-            students = students.filter(interests__icontains=form.cleaned_data['interests'])
-        if form.cleaned_data.get('skills'):
-            students = students.filter(skills__icontains=form.cleaned_data['skills'])
+    if request.method == 'POST':
+        form = RecruiterProfileForm(request.POST, request.FILES, instance=recruiter_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect(f'/profile/{username}/')
+    else:
+        form = RecruiterProfileForm(instance=recruiter_profile)
 
-    return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+    return render(request, 'recruiter/edit_profile.html', {'form': form, 'username': username})
+
+@login_required
+def recruiter_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    recruiter_profile = get_object_or_404(RecruiterProfile, user=profile_user)
+
+    if profile_user.role != 'recruiter':
+        return redirect(f"/profile/{username}/")
+
+    return render(request, "recruiter/recruiter_profile.html", {
+        "profile_user": profile_user,
+        "recruiter_profile": recruiter_profile,
+    })
+
 
 @login_required
 def recruiter_dashboard(request):
-    students = StudentProfile.objects.all()
-    form = StudentSearchForm(request.GET)
+    form = StudentSearchForm(request.GET or None)
+    students = StudentProfile.objects.filter(visibility='public')
 
-    if form.is_valid():
-        if form.cleaned_data["school"]:
-            students = students.filter(school__icontains=form.cleaned_data["school"])
-        if form.cleaned_data["course"]:
-            students = students.filter(course__icontains=form.cleaned_data["course"])
-        if form.cleaned_data["skills"]:
-            students = students.filter(skills__icontains=form.cleaned_data["skills"])
+    if form.is_valid() and any(form.cleaned_data.values()):
+        students = StudentProfile.objects.all()
+        name = form.cleaned_data.get('name')
+        school = form.cleaned_data.get('school')
+        course = form.cleaned_data.get('course')
+        interests = form.cleaned_data.get('interests')
+        skills = form.cleaned_data.get('skills')
 
-    return render(request, "recruiter/dashboard.html", {"form": form, "students": students})
+        if name:
+            students = students.filter(user__username__icontains=name)
+        if school:
+            students = students.filter(school__icontains=school)
+        if course:
+            students = students.filter(course__icontains=course)
+        if interests:
+            students = students.filter(interests__icontains=interests)
+        if skills:
+            students = students.filter(skills__icontains=skills)
+
+    return render(request, 'recruiter/dashboard.html', {
+        'form': form,
+        'students': students
+    })
 
 
 @login_required
-def invite_student(request, student_id):
+def contact_student(request, student_id):
     student = get_object_or_404(StudentProfile, id=student_id)
-    recruiter = request.user.recruiterprofile
-
-    existing_invite = Invitation.objects.filter(recruiter=request.user, student=student).first()
-    if existing_invite:
-        return JsonResponse({'message': 'Invitation already sent'}, status=400)
-
-    Invitation.objects.create(recruiter=request.user, student=student)
-    return JsonResponse({"message": "Invitation Sent", "status": "invited"})
+    return render(request, 'recruiter/contact_email.html', {
+        'email': student.user.email
+    })
 
 
 @login_required
@@ -336,6 +403,25 @@ def save_student(request, student_id):
 
     recruiter.saved_students.add(student)
     return JsonResponse({"message": "Student Saved", "status": "saved"})
+
+@login_required
+def saved_students(request):
+    recruiter = request.user.recruiterprofile
+    saved_students = recruiter.saved_students.all()
+    return render(request, 'recruiter/saved_students.html', {
+        'saved_students': saved_students
+    })
+
+
+def unsave_student(request, student_id):
+    recruiter = request.user.recruiterprofile
+    student = get_object_or_404(StudentProfile, id=student_id)
+
+    if student in recruiter.saved_students.all():
+        recruiter.saved_students.remove(student)
+
+    return redirect('saved_students')
+
 
 # Social Features
 @login_required
@@ -396,6 +482,11 @@ def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
     return JsonResponse({"message": "Friend request declined"})
+
+@login_required
+def friend_requests(request):
+    requests = FriendRequest.objects.filter(to_user=request.user, accepted=False)
+    return render(request, 'UniSphereApp/friend_requests.html', {'request':requests})
 
 @login_required
 def share_post(request, post_id):

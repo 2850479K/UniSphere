@@ -62,10 +62,21 @@ class CommentForm(forms.ModelForm):
         fields = ['content']
 
 # Recruiter Profile & Student Search Forms
+class CreateBasicRecruiterProfileForm(forms.ModelForm):
+    class Meta:
+        model = RecruiterProfile
+        fields = ['full_name', 'profile_picture', 'company_name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['full_name'].required = True
+        self.fields['profile_picture'].required = False
+        self.fields['company_name'].required = True
+
 class RecruiterProfileForm(forms.ModelForm):
     class Meta:
         model = RecruiterProfile
-        fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+        fields = ['profile_picture', 'full_name', 'company_name', 'industry', 'company_website', 'company_description', 'location']
         widgets = {
             'company_description': forms.Textarea(attrs={'rows': 4}),
         }

@@ -1,108 +1,19 @@
 {% extends 'base.html' %}
-
-{% block title %}Create Recruiter Profile - UniSphere{% endblock %}
+{% block title %}Complete Your Recruiter Profile{% endblock %}
 
 {% block content %}
 <div class="container d-flex justify-content-center align-items-center" style="height: 90vh;">
-    <div class="card shadow-lg p-4" style="width: 100%; max-width: 500px;">
-        <h2 class="text-center mb-3">Create Recruiter Profile</h2>
+    <div class="card shadow p-4" style="width: 100%; max-width: 400px;">
+        <h3 class="text-center mb-4">Complete Your Recruiter Profile</h3>
 
-        <div id="message-box" class="alert d-none text-center" role="alert"></div>
-
-        <form id="profile-form" method="post">
+        <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            <div class="mb-2">
-                <label for="company_name" class="form-label">Company Name</label>
-                <input type="text" name="company_name" id="company_name" class="form-control" required>
+            {{ form.as_p }}
+
+            <div class="d-grid mt-3">
+                <button type="submit" class="btn btn-primary">Save Profile</button>
             </div>
-            <div class="mb-2">
-                <label for="industry" class="form-label">Industry</label>
-                <input type="text" name="industry" id="industry" class="form-control" required>
-            </div>
-            <div class="mb-2">
-                <label for="company_website" class="form-label">Company Website</label>
-                <input type="url" name="company_website" id="company_website" class="form-control">
-            </div>
-            <div class="mb-2">
-                <label for="company_description" class="form-label">Company Description</label>
-                <textarea name="company_description" id="company_description" class="form-control" rows="3"></textarea>
-            </div>
-            <div class="mb-2">
-                <label for="location" class="form-label">Location</label>
-                <input type="text" name="location" id="location" class="form-control">
-            </div>
-            <button type="submit" class="btn btn-success w-100">Save Profile</button>
         </form>
     </div>
 </div>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const form = document.getElementById("profile-form");
-    const messageContainer = document.createElement("div");
-    messageContainer.id = "message-container";
-    messageContainer.style.position = "fixed";
-    messageContainer.style.top = "10px";
-    messageContainer.style.left = "50%";
-    messageContainer.style.transform = "translateX(-50%)";
-    messageContainer.style.zIndex = "1000";
-    messageContainer.style.width = "50%";
-    messageContainer.style.maxWidth = "600px";
-    document.body.prepend(messageContainer);
-
-    function showMessage(type, text) {
-        let alertClass = "alert-info";
-        if (type === "success") alertClass = "alert-success";
-        if (type === "error") alertClass = "alert-danger";
-        if (type === "warning") alertClass = "alert-warning";
-
-        let messageBox = document.createElement("div");
-        messageBox.className = `alert ${alertClass} alert-dismissible fade show text-center`;
-        messageBox.innerHTML = `
-            <strong>${text}</strong>
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        `;
-        messageContainer.innerHTML = "";
-        messageContainer.appendChild(messageBox);
-
-        setTimeout(() => messageBox.remove(), 5000);
-    }
-
-    form.addEventListener("submit", function (event) {
-        event.preventDefault();
-
-        let missingFields = [];
-        document.querySelectorAll("#profile-form input[required], #profile-form textarea[required]").forEach(input => {
-            if (!input.value.trim()) {
-                missingFields.push(input.previousElementSibling.textContent);
-            }
-        });
-
-        if (missingFields.length > 0) {
-            showMessage("error", "Please fill in all required fields!");
-            return;
-        }
-
-        fetch("/recruiter/check-profile/", { method: "GET", credentials: "same-origin" })
-            .then(response => response.json())
-            .then(data => {
-                if (data.exists) {
-                    showMessage("warning", "One ID can only create one profile!");
-                } else {
-                    form.submit();
-                }
-            })
-            .catch(error => console.error("Error checking profile:", error));
-    });
-
-    {% if messages %}
-        {% for message in messages %}
-            showMessage("success", "{{ message }}");
-        {% endfor %}
-    {% endif %}
-});
-</script>
-
 {% endblock %}
