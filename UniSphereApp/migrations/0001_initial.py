@@ -40,7 +40,7 @@ class Migration(migrations.Migration):
                 ('is_staff', models.BooleanField(default=False, help_text='Designates whether the user can log into this admin site.', verbose_name='staff status')),
                 ('is_active', models.BooleanField(default=True, help_text='Designates whether this user should be treated as active. Unselect this instead of deleting accounts.', verbose_name='active')),
                 ('date_joined', models.DateTimeField(default=django.utils.timezone.now, verbose_name='date joined')),
-                ('role', models.CharField(choices=[('student', 'Student'), ('recruiter', 'Recruiter')], default='student', max_length=10)),
+                ('role', models.CharField(choices=[('student', 'Student'), ('society', 'Society')], default='student', max_length=10)),
                 ('groups', models.ManyToManyField(blank=True, help_text='The groups this user belongs to. A user will get all permissions granted to each of their groups.', related_name='user_set', related_query_name='user', to='auth.Group', verbose_name='groups')),
                 ('user_permissions', models.ManyToManyField(blank=True, help_text='Specific permissions for this user.', related_name='user_set', related_query_name='user', to='auth.Permission', verbose_name='user permissions')),
             ],
@@ -98,7 +98,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
-            name='RecruiterProfile',
+            name='SocietyProfile',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('profile_picture', models.ImageField(blank=True, null=True, upload_to='profile_pictures/')),
@@ -139,7 +139,7 @@ class Migration(migrations.Migration):
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('status', models.CharField(choices=[('pending', 'Pending'), ('accepted', 'Accepted'), ('declined', 'Declined')], default='pending', max_length=20)),
                 ('sent_at', models.DateTimeField(auto_now_add=True)),
-                ('recruiter', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_invitations', to=settings.AUTH_USER_MODEL)),
+                ('society', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='sent_invitations', to=settings.AUTH_USER_MODEL)),
                 ('student', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='received_invitations', to='UniSphereApp.StudentProfile')),
             ],
         ),

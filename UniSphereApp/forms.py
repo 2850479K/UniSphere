@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StudentPost, Project, RecruiterProfile, StudentProfile, Comment, FriendRequest
+from .models import StudentPost, Project, SocietyProfile, StudentProfile, Comment, FriendRequest
 
 User = get_user_model()
 
@@ -61,10 +61,10 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['content']
 
-# Recruiter Profile & Student Search Forms
-class CreateBasicRecruiterProfileForm(forms.ModelForm):
+# Society Profile & Student Search Forms
+class CreateBasicSocietyProfileForm(forms.ModelForm):
     class Meta:
-        model = RecruiterProfile
+        model = SocietyProfile
         fields = ['full_name', 'profile_picture', 'company_name']
 
     def __init__(self, *args, **kwargs):
@@ -73,9 +73,9 @@ class CreateBasicRecruiterProfileForm(forms.ModelForm):
         self.fields['profile_picture'].required = False
         self.fields['company_name'].required = True
 
-class RecruiterProfileForm(forms.ModelForm):
+class SocietyProfileForm(forms.ModelForm):
     class Meta:
-        model = RecruiterProfile
+        model = SocietyProfile
         fields = ['profile_picture', 'full_name', 'company_name', 'industry', 'company_website', 'company_description', 'location']
         widgets = {
             'company_description': forms.Textarea(attrs={'rows': 4}),
@@ -92,6 +92,7 @@ class RecruiterProfileForm(forms.ModelForm):
         return cleaned_data
 
 class StudentSearchForm(forms.Form):
+    username = forms.CharField(required=False)
     name = forms.CharField(required=False, label="Student Name")
     school = forms.CharField(required=False, label="School")
     course = forms.CharField(required=False, label="Course")

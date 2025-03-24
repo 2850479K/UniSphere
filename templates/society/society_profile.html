@@ -8,7 +8,7 @@
             <p><strong>Industry:</strong> {{ recruiter_profile.industry }}</p>
             <p><strong>Location:</strong> {{ recruiter_profile.location }}</p>
             {% if is_owner %}
-                <a href="{% url 'edit_recruiter_profile' username=profile_user.username %}" class="btn btn-primary">Edit Profile</a>
+                <a href="{% url 'edit_society_profile' username=profile_user.username %}" class="btn btn-primary">Edit Profile</a>
             {% endif %}
         </div>
     </div>

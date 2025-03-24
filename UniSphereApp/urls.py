@@ -1,11 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
-from .views import create_recruiter_profile
-from .views import recruiter_dashboard
-from .views import contact_student, save_student
-from .views import saved_students
-from .views import unsave_student
+from .views import create_society_profile, society_dashboard,contact_student, save_student, saved_students, unsave_student
 from . import views
 
 
@@ -32,15 +28,15 @@ urlpatterns = [
     path('portfolio/deletepost/<int:post_id>/', views.delete_post, name='delete_post'),
     path('post/<int:post_id>/comments/all/', views.view_all_comments, name='view_all_comments'),
 
-    # Recruiter & Student Search
-    path('recruiter/profile/<str:username>/', views.recruiter_profile, name='recruiter_profile'),
-    path('recruiter/create-profile/', views.create_recruiter_profile, name='create_recruiter_profile'),
-    path('recruiter/edit-profile/<str:username>/', views.edit_recruiter_profile, name='edit_recruiter_profile'),
-    path("recruiter/dashboard/", recruiter_dashboard, name="recruiter_dashboard"),
-    path('recruiter/contact/<int:student_id>/', views.contact_student, name='contact_student'),
-    path('recruiter/save/<int:student_id>/', save_student, name='save_student'),
-    path('recruiter/saved-students/', views.saved_students, name='saved_students'),
-    path('recruiter/unsave/<int:student_id>/', unsave_student, name='unsave_student'),
+    # Society & Student Search
+    path('society/profile/<str:username>/', views.society_profile, name='society_profile'),
+    path('society/create-profile/', views.create_society_profile, name='create_society_profile'),
+    path('society/edit-profile/<str:username>/', views.edit_society_profile, name='edit_society_profile'),
+    path("society/dashboard/", society_dashboard, name="society_dashboard"),
+    path('society/contact/<int:student_id>/', views.contact_student, name='contact_student'),
+    path('society/save/<int:student_id>/', save_student, name='save_student'),
+    path('society/saved-students/', views.saved_students, name='saved_students'),
+    path('society/unsave/<int:student_id>/', unsave_student, name='unsave_student'),
 
     # Social Features
     path('post/<int:post_id>/like/', views.like_post, name='like_post'),

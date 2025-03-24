@@ -11,22 +11,22 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.AddField(
-            model_name='recruiterprofile',
+            model_name='societyprofile',
             name='saved_students',
-            field=models.ManyToManyField(blank=True, related_name='saved_by_recruiters', to='UniSphereApp.StudentProfile'),
+            field=models.ManyToManyField(blank=True, related_name='saved_by_societys', to='UniSphereApp.StudentProfile'),
         ),
         migrations.AlterField(
-            model_name='recruiterprofile',
+            model_name='societyprofile',
             name='company_description',
             field=models.TextField(),
         ),
         migrations.AlterField(
-            model_name='recruiterprofile',
+            model_name='societyprofile',
             name='company_website',
             field=models.URLField(),
         ),
         migrations.AlterField(
-            model_name='recruiterprofile',
+            model_name='societyprofile',
             name='location',
             field=models.CharField(max_length=255),
         ),

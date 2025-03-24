@@ -41,10 +41,10 @@
             </div>
             <div class="col-md-4 text-end">
                 {% if user.is_authenticated %}
-                    {% if user.role == "recruiter" %}
-                        <a href="{% url 'recruiter_dashboard' %}" class="btn btn-warning me-2">Dashboard</a>
+                    {% if user.role == "society" %}
+                        <a href="{% url 'society_dashboard' %}" class="btn btn-warning me-2">Dashboard</a>
                     {% endif %}
-                    {% if user.is_authenticated and user.recruiterprofile %}
+                    {% if user.is_authenticated and user.societyprofile %}
                         <a href="{% url 'saved_students' %}" class="btn btn-light">Saved</a>
                     {% endif %}
                     <a href="{% url 'profile' user.username %}" class="btn btn-light">Profile</a>
@@ -78,8 +78,6 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 
-
-    </div>
 
 </body>
 </html>
