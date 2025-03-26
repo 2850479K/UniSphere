@@ -47,4 +47,11 @@ document.addEventListener("DOMContentLoaded", function () {
         const cookie = document.cookie.split(";").find(cookie => cookie.trim().startsWith("csrftoken="));
         return cookie ? cookie.split("=")[1] : "";
     }
+
+    // Toast notifications auto-show
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl, { delay: 3000 }); // Auto-dismiss after 3 seconds
+    });
+    toastList.forEach(toast => toast.show());
 });
