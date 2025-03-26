@@ -29,8 +29,8 @@ urlpatterns = [
     path('post/<int:post_id>/', views.view_post, name='view_post'),
     path('create_profile_post/', views.create_post, name='create_profile_post'),
 
-    path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
     
+    path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
 
     # Social Features
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),

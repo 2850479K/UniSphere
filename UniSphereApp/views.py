@@ -107,10 +107,15 @@ def profile(request, username):
 
     elif profile_user.role == 'society':
         profile, created = SocietyProfile.objects.get_or_create(user=profile_user)
+        projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]  # Get projects for society
+        recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
+
         return render(request, "UniSphereApp/society_profile.html", {
             "profile": profile,
             "profile_user": profile_user,
             "is_owner": is_owner,
+            "projects": projects,
+            "recent_posts": recent_posts,
         })
 
 @login_required
@@ -406,6 +411,10 @@ def shared_posts_list(request):
 @login_required
 def edit_society_profile(request):
     profile = get_object_or_404(SocietyProfile, user=request.user)
+
+    if request.user != profile.user:
+        messages.error(request, "You are not authorized to edit this profile.")
+        return redirect('profile', username=request.user.username)
 
     if request.method == 'POST':
         form = SocietyProfileForm(request.POST, request.FILES, instance=profile)

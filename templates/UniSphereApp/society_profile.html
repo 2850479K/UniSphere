@@ -18,26 +18,28 @@
                 {% endif %}
             </div>
 
-            {% if profile.description and profile.description != "Not set" %}
+            {% if profile.description %}
                 <p><strong>Description:</strong> {{ profile.description }}</p>
             {% endif %}
 
-            {% if profile.website and profile.website != "Not set" %}
+            {% if profile.website %}
                 <p><strong>Website:</strong> <a href="{{ profile.website }}" target="_blank">{{ profile.website }}</a></p>
             {% endif %}
 
-            {% if profile.category and profile.category != "Not set" %}
+            {% if profile.category %}
                 <p><strong>Category:</strong> {{ profile.category }}</p>
             {% endif %}
 
-            {% if profile.social_links and profile.social_links != "Not set" %}
+            {% if profile.social_links %}
                 <p><strong>Social Links:</strong> <a href="{{ profile.social_links }}" target="_blank">{{ profile.social_links }}</a></p>
             {% endif %}
 
-            {% if profile.contact_email and profile.contact_email != "Not set" %}
-                <p><strong>Contact Email:</strong> <a href="mailto:{{ profile.contact_email }}">{{ profile.contact_email }}</a></p>
+            {% if profile.contact_email %}
+                <p><strong>Contact Email:</strong> {{ profile.contact_email }}</p>
             {% endif %}
         </div>
+
+        <hr class="my-4"/>
 
         <!-- Recent Projects Section -->
         <h3 class="mt-4">Recent Projects</h3>
@@ -63,34 +65,33 @@
         <hr class="my-4"/>
 
         <!-- Recent Posts Section -->
-        <h3>Recent Posts</h3>
+        <h3 class="mt-4">Recent Posts</h3>
         <div class="row mt-3">
             {% for post in recent_posts %}
-            <div class="col-md-4 mb-3">
-                <!-- Wrap each post in a link to its detail view -->
-                <a href="{% url 'view_post' post.id %}" class="text-decoration-none text-reset">
-                    <div class="card shadow-sm">
-                        {% if post.files.all %}
-                            {% for file in post.files.all|slice:":1" %}
-                                {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
-                                    <img src="{{ file.file.url }}" class="card-img-top" alt="Post image">
-                                {% else %}
-                                    <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
-                                {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
-                        {% endif %}
-                        <div class="card-body p-2">
-                            <p class="card-text">{{ post.caption|truncatechars:50 }}</p>
+                <div class="col-md-4 mb-3">
+                    <a href="{% url 'view_post' post.id %}" class="text-decoration-none text-reset">
+                        <div class="card shadow-sm">
+                            {% if post.files.all %}
+                                {% for file in post.files.all|slice:":1" %}
+                                    {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                                        <img src="{{ file.file.url }}" class="card-img-top" alt="Post image">
+                                    {% else %}
+                                        <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                            {% endif %}
+                            <div class="card-body p-2">
+                                <p class="card-text">{{ post.caption|truncatechars:50 }}</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
             {% empty %}
-            <div class="col-12">
-                <p class="text-muted text-center">No posts available.</p>
-            </div>
+                <div class="col-12">
+                    <p class="text-muted text-center">No posts available.</p>
+                </div>
             {% endfor %}
         </div>
         <div class="text-center mt-3">
