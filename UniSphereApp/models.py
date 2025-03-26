@@ -76,6 +76,8 @@ class StudentProfile(models.Model):
     interests = models.TextField(blank=True, null=True)  
     languages = models.CharField(max_length=255, blank=True, null=True)  
     visibility = models.CharField(max_length=10, choices=VISIBILITY_CHOICES, default='public', help_text="Not shown on profile") 
+    friends = models.ManyToManyField("self", blank=True)
+
 
     def get_profile_picture_url(self):
         if self.profile_picture:
@@ -106,10 +108,30 @@ class Share(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
 class FriendRequest(models.Model):
+    PENDING = 'pending'
+    ACCEPTED = 'accepted'
+    DECLINED = 'declined'
+    
+    STATUS_CHOICES = [
+        (PENDING, 'Pending'),
+        (ACCEPTED, 'Accepted'),
+        (DECLINED, 'Declined'),
+    ]
+    
     from_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="sent_requests", on_delete=models.CASCADE)
     to_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="received_requests", on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
-    accepted = models.BooleanField(default=False)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=PENDING)
+
+    def accept(self):
+        self.status = self.ACCEPTED
+        self.save()
+        self.from_user.studentprofile.friends.add(self.to_user.studentprofile)
+        self.to_user.studentprofile.friends.add(self.from_user.studentprofile)
+    
+    def decline(self):
+        self.status = self.DECLINED
+        self.save()
 
     def __str__(self):
         return f"Friend Request from {self.from_user.username} to {self.to_user.username}"
