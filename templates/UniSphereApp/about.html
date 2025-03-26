@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}About - UniSphere{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/about.css' %}">
+
+<div class="about-container text-center">
+    <h1 class="about-title">About UniSphere</h1>
+    <p class="about-description">
+        Welcome to UniSphere, the student-first academic network where learners connect, create, and showcase their journey.<br>
+        We serve students and educators across departments, disciplines, and dreams.
+    </p>
+</div>
+{% endblock %}

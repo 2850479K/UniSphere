@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Welcome - UniSphere{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/welcome.css' %}">
+
+<div >
+    <h2>Welcome To UniSphere</h2>
+    <div class="d-flex justify-content-left gap-3 mt-5">
+        <button class="btn btn-primary">Sign in with password</button>
+        <button class="btn btn-primary">Register with student ID</button>
+    </div>
+
+    <div class="mt-4 text-start mx-left policy-style mt-5" style="max-width: 480px;">
+        <small>
+            By clicking Continue to sign in or register, you agree to UniSphere's
+            <a href="#">User Agreement</a>, <a href="#">Privacy Policy</a>, and <a href="#">Cookie Policy</a>.
+        </small>
+    </div>
+
+
+    <div class="about-link mt-4 mt-5">
+        <span>What is UniSphere? </span><a href="{% url 'about' %}" class="about-highlight">About us</a>
+    </div>
+</div>
+{% endblock %}

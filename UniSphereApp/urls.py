@@ -2,6 +2,7 @@ from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
 from . import views
+from .views import welcomepage
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -12,6 +13,8 @@ urlpatterns = [
     path('accounts/logout/', LogoutView.as_view(template_name='UniSphereApp/logout.html'), name='logout'),
     path('profile/<str:username>/', views.profile, name='profile'),
     path('profile/', views.my_profile, name='my_profile'),
+    path('welcome/', views.welcomepage, name='welcomepage'),
+    path('about/', views.about, name='about'),
 
     # Portfolio & Projects
     path('portfolio/create_project/', views.create_project, name='create_project'),

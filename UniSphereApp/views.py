@@ -12,6 +12,12 @@ User = get_user_model()
 def home(request):
     return render(request, 'UniSphereApp/home.html')
 
+def welcomepage(request):
+    return render(request, 'UniSphereApp/welcomepage.html')
+
+def about(request):
+    return render(request, 'UniSphereApp/about.html')
+
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
