@@ -30,7 +30,7 @@ urlpatterns = [
     path('create_profile_post/', views.create_post, name='create_profile_post'),
 
     # Recruiter & Student Search
-    path('search-students/', views.search_students, name='search_students'),
+    
 
     # Social Features
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),

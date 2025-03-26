@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StudentPost, Project, RecruiterProfile, StudentProfile, Comment, FriendRequest
+from .models import StudentPost, Project, StudentProfile, Comment, FriendRequest, SocietyProfile
 
 User = get_user_model()
 
@@ -61,11 +61,8 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['content']
 
-# Recruiter Profile & Student Search Forms
-class RecruiterProfileForm(forms.ModelForm):
-    class Meta:
-        model = RecruiterProfile
-        fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+# Student Search Forms
+
 
 class StudentSearchForm(forms.Form):
     name = forms.CharField(required=False, label="Student Name")
@@ -79,3 +76,8 @@ class FriendRequestForm(forms.ModelForm):
     class Meta:
         model = FriendRequest
         fields = []
+
+class SocietyProfileForm(forms.ModelForm):
+    class Meta:
+        model = SocietyProfile
+        fields = ['society_name', 'description', 'website', 'logo']

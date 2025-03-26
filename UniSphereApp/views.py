@@ -3,8 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
-from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
+from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost, SocietyProfile
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -78,65 +78,64 @@ def profile_posts(request, username):
 
 @login_required
 def create_profile(request):
-    profile, created = StudentProfile.objects.get_or_create(user=request.user)
-
-    if request.method == 'POST':
-        form = CreateProfileForm(request.POST, request.FILES, instance=profile)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Profile created successfully!")
-            return redirect('profile', username=request.user.username)
+    if request.user.role == 'student':
+        profile, created = StudentProfile.objects.get_or_create(user=request.user)
+        if request.method == 'POST':
+            form = CreateProfileForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Student profile created successfully!")
+                return redirect('profile', username=request.user.username)
         else:
-            messages.error(request, "Error creating profile. Please check the form.")
-    else:
-        form = CreateProfileForm(instance=profile)
+            form = CreateProfileForm(instance=profile)
+        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
-    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+    elif request.user.role == 'society':
+        profile, created = SocietyProfile.objects.get_or_create(user=request.user)
+        if request.method == 'POST':
+            form = SocietyProfileForm(request.POST, request.FILES, instance=profile)
+            if form.is_valid():
+                form.save()
+                messages.success(request, "Society profile created successfully!")
+                return redirect('profile', username=request.user.username)
+        else:
+            form = SocietyProfileForm(instance=profile)
+        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    profile, created = StudentProfile.objects.get_or_create(user=profile_user)
-    projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
+    is_owner = request.user == profile_user
 
-    is_owner = (request.user == profile_user)
+    if profile_user.role == 'student':
+        profile, created = StudentProfile.objects.get_or_create(user=profile_user)
+        projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
+        recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
 
-    # If profile is private and current user isn't the owner, show a limited view
-    if profile.visibility == "private" and not is_owner:
-        return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
+        if profile.visibility == "private" and not is_owner:
+            return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
-    # Get up to 6 most recent posts by this user
-    recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
-
-    return render(
-        request,
-        "UniSphereApp/profile.html",
-        {
+        return render(request, "UniSphereApp/student_profile.html", {
             "profile": profile,
             "projects": projects,
             "profile_user": profile_user,
             "is_owner": is_owner,
-            "recent_posts": recent_posts,  # Pass this to display in the template
-        }
-    )
+            "recent_posts": recent_posts,
+        })
+
+    elif profile_user.role == 'society':
+        profile, created = SocietyProfile.objects.get_or_create(user=profile_user)
+        return render(request, "UniSphereApp/society_profile.html", {
+            "profile": profile,
+            "profile_user": profile_user,
+            "is_owner": is_owner,
+        })
 
 @login_required
 def my_profile(request):
     return redirect('profile', username=request.user.username)
 
-# Recruiter Profile & Student Search
-@login_required
-def create_recruiter_profile(request):
-    if request.method == 'POST':
-        form = RecruiterProfileForm(request.POST, request.FILES)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user = request.user
-            profile.save()
-            return redirect('home')
-    else:
-        form = RecruiterProfileForm()
-    return render(request, 'recruiter/create_profile.html', {'form': form})
+
 
 @login_required
 def edit_profile(request):
