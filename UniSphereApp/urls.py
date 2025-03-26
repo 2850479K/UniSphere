@@ -1,7 +1,9 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
+from .views import create_society_profile, society_dashboard,contact_student, save_student, saved_students, unsave_student
 from . import views
+
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -29,8 +31,15 @@ urlpatterns = [
     path('post/<int:post_id>/', views.view_post, name='view_post'),
     path('create_profile_post/', views.create_post, name='create_profile_post'),
 
-    # Recruiter & Student Search
-    path('search-students/', views.search_students, name='search_students'),
+    # Society & Student Search
+    path('society/profile/<str:username>/', views.society_profile, name='society_profile'),
+    path('society/create-profile/', views.create_society_profile, name='create_society_profile'),
+    path('society/edit-profile/<str:username>/', views.edit_society_profile, name='edit_society_profile'),
+    path("society/dashboard/", society_dashboard, name="society_dashboard"),
+    path('society/contact/<int:student_id>/', views.contact_student, name='contact_student'),
+    path('society/save/<int:student_id>/', save_student, name='save_student'),
+    path('society/saved-students/', views.saved_students, name='saved_students'),
+    path('society/unsave/<int:student_id>/', unsave_student, name='unsave_student'),
 
     # Social Features
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
@@ -44,4 +53,7 @@ urlpatterns = [
     path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
     path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
     path('friend-request/decline/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
+    path('friend-requests/', views.friend_requests, name='friend_requests'),
 ]
+
+

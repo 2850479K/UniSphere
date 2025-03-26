@@ -3,10 +3,19 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
-from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
+
+from .models import (
+    Project, StudentPost, PostFile, RecruiterProfile, SocietyProfile, StudentProfile,
+    Comment, Like, Share, FriendRequest, SharedPost
+)
+
+from .forms import (
+    ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm,
+    SocietyProfileForm, StudentSearchForm, StudentProfileForm,
+    CreateProfileForm, EditProfileForm, CreateBasicSocietyProfileForm
+)
 
 User = get_user_model()
 
@@ -44,8 +53,16 @@ def register(request):
 
             user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])  
             if user is not None:
-                login(request, user)  
-                return redirect('create_profile')
+                login(request, user)
+                if user.role == 'society':
+                    existing_profile = SocietyProfile.objects.filter(user=user).first()
+                    if existing_profile:
+                        return redirect('profile', username=user.username)
+                    else:
+                        return redirect('create_society_profile')
+                else:
+                    return redirect('create_profile')
+
     else:
         form = UserRegisterForm()
 
@@ -59,12 +76,19 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
+
+            if user.role == 'society':
+                existing_profile = SocietyProfile.objects.filter(user=user).first()
+                if not existing_profile:
+                    return redirect("/society/create-profile/")
+                return redirect(f"/profile/{user.username}/")
+
             if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # AJAX request
                 return JsonResponse({"message": "Login successful!", "redirect": "my_profile"}, status=200)
             messages.success(request, "You have successfully logged in.")
             return redirect('my_profile')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"error": "Invalid username or password."}, status=400)
             messages.error(request, "Invalid username or password.")
 
@@ -97,9 +121,11 @@ def create_profile(request):
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
     profile, created = StudentProfile.objects.get_or_create(user=profile_user)
+
     projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
 
     is_owner = (request.user == profile_user)
+
 
     # If profile is private and current user isn't the owner, show a limited view
     if profile.visibility == "private" and not is_owner:
@@ -124,19 +150,6 @@ def profile(request, username):
 def my_profile(request):
     return redirect('profile', username=request.user.username)
 
-# Recruiter Profile & Student Search
-@login_required
-def create_recruiter_profile(request):
-    if request.method == 'POST':
-        form = RecruiterProfileForm(request.POST, request.FILES)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user = request.user
-            profile.save()
-            return redirect('home')
-    else:
-        form = RecruiterProfileForm()
-    return render(request, 'recruiter/create_profile.html', {'form': form})
 
 @login_required
 def edit_profile(request):
@@ -145,8 +158,8 @@ def edit_profile(request):
     if request.method == 'POST':
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            if request.POST.get("delete_picture"):  
-                profile.profile_picture.delete()  
+            if request.POST.get("delete_picture"):
+                profile.profile_picture.delete()
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=request.user.username)
@@ -158,6 +171,10 @@ def edit_profile(request):
 # Portfolio & Projects
 def user_portfolio(request, username):
     profile_user = get_object_or_404(User, username=username)
+
+    if profile_user.studentprofile.visibility != 'public' and not request.user.is_staff:
+        return HttpResponseForbidden("You do not have permission to view this profile.")
+
     projects = Project.objects.filter(user=profile_user).order_by('-timestamp')
     return render(request, 'UniSphereApp/portfolio.html', {'projects': projects, 'profile_user': profile_user})
 
@@ -311,19 +328,153 @@ def search_students(request):
     form = StudentSearchForm(request.GET)
     students = StudentProfile.objects.all()
 
-    if form.is_valid():
-        if form.cleaned_data.get('name'):
-            students = students.filter(user__username__icontains=form.cleaned_data['name'])
-        if form.cleaned_data.get('school'):
-            students = students.filter(school__icontains=form.cleaned_data['school'])
-        if form.cleaned_data.get('course'):
-            students = students.filter(course__icontains=form.cleaned_data['course'])
-        if form.cleaned_data.get('interests'):
-            students = students.filter(interests__icontains=form.cleaned_data['interests'])
-        if form.cleaned_data.get('skills'):
-            students = students.filter(skills__icontains=form.cleaned_data['skills'])
 
-    return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+# Society Profile & Student Search
+
+@login_required
+def create_society_profile(request):
+    existing_profile = SocietyProfile.objects.filter(user=request.user).first()
+
+    if request.method == "POST":
+        form = SocietyProfileForm(request.POST, request.FILES)
+        if form.is_valid():
+            profile = form.save(commit=False)
+            profile.user = request.user
+            profile.save()
+            messages.success(request, "Successfully created profile!")
+            return redirect(f"/society/profile/{request.user.username}/")
+        else:
+            messages.error(request, "Please fill in all required fields!")
+
+    else:
+        form = SocietyProfileForm()
+
+    return render(request, "society/create_profile.html", {"form": form})
+
+@login_required
+def create_society_profile(request):
+    profile, created = SocietyProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        form = CreateBasicSocietyProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Basic society profile saved!")
+            return redirect('society_profile', username=request.user.username)
+    else:
+        form = CreateBasicSocietyProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+
+
+@login_required
+def edit_society_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+
+    if request.user != profile_user or request.user.role != 'society':
+        messages.error(request, "You are not allowed to edit this profile.")
+        return redirect('/')
+
+    society_profile = get_object_or_404(SocietyProfile, user=profile_user)
+
+    if request.method == 'POST':
+        form = SocietyProfileForm(request.POST, request.FILES, instance=society_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Profile updated successfully!")
+            return redirect(f'/profile/{username}/')
+    else:
+        form = SocietyProfileForm(instance=society_profile)
+
+    return render(request, 'society/edit_profile.html', {'form': form, 'username': username})
+
+@login_required
+def society_profile(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    society_profile = get_object_or_404(SocietyProfile, user=profile_user)
+
+    if profile_user.role != 'society':
+        return redirect(f"/profile/{username}/")
+
+    return render(request, "society/society_profile.html", {
+        "profile_user": profile_user,
+        "society_profile": society_profile,
+    })
+
+
+@login_required
+def society_dashboard(request):
+    form = StudentSearchForm(request.GET or None)
+    students = StudentProfile.objects.select_related('user').filter(visibility='public')
+    show_results = False
+
+    if form.is_valid() and any(form.cleaned_data.values()):
+        students = StudentProfile.objects.all()
+        username = form.cleaned_data.get('username')
+        name = form.cleaned_data.get('name')
+        school = form.cleaned_data.get('school')
+        course = form.cleaned_data.get('course')
+        interests = form.cleaned_data.get('interests')
+        skills = form.cleaned_data.get('skills')
+
+        if username:
+            students = students.filter(user__username__icontains=username)
+        if name:
+            students = students.filter(full_name__icontains=name)
+        if school:
+            students = students.filter(school__icontains=school)
+        if course:
+            students = students.filter(course__icontains=course)
+        if interests:
+            students = students.filter(interests__icontains=interests)
+        if skills:
+            students = students.filter(skills__icontains=skills)
+
+        show_results = True
+    return render(request, 'society/dashboard.html', {
+        'form': form,
+        'students': students,
+        'show_results': show_results,
+    })
+
+
+@login_required
+def contact_student(request, student_id):
+    student = get_object_or_404(StudentProfile, id=student_id)
+    return render(request, 'society/contact_email.html', {
+        'email': student.user.email
+    })
+
+
+@login_required
+def save_student(request, student_id):
+    student = get_object_or_404(StudentProfile, id=student_id)
+    society = request.user.societyprofile
+
+    if student in society.saved_students.all():
+        return JsonResponse({"message": "Already Saved"}, status=400)
+
+    society.saved_students.add(student)
+    return JsonResponse({"message": "Student Saved", "status": "saved"})
+
+@login_required
+def saved_students(request):
+    society = request.user.societyprofile
+    saved_students = society.saved_students.all()
+    return render(request, 'society/saved_students.html', {
+        'saved_students': saved_students
+    })
+
+@login_required
+def unsave_student(request, student_id):
+    society = request.user.societyprofile
+    student = get_object_or_404(StudentProfile, id=student_id)
+
+    if student in society.saved_students.all():
+        society.saved_students.remove(student)
+
+    return redirect('saved_students')
+
 
 # Social Features
 @login_required
@@ -403,6 +554,11 @@ def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
     return JsonResponse({"message": "Friend request declined"})
+
+@login_required
+def friend_requests(request):
+    requests = FriendRequest.objects.filter(to_user=request.user, accepted=False)
+    return render(request, 'UniSphereApp/friend_requests.html', {'request':requests})
 
 @login_required
 def share_post(request, post_id):

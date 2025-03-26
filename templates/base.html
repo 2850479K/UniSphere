@@ -41,6 +41,12 @@
             </div>
             <div class="col-md-4 text-end">
                 {% if user.is_authenticated %}
+                    {% if user.role == "society" %}
+                        <a href="{% url 'society_dashboard' %}" class="btn btn-warning me-2">Dashboard</a>
+                    {% endif %}
+                    {% if user.is_authenticated and user.societyprofile %}
+                        <a href="{% url 'saved_students' %}" class="btn btn-light">Saved</a>
+                    {% endif %}
                     <a href="{% url 'profile' user.username %}" class="btn btn-light">Profile</a>
                     <a href="{% url 'logout' %}" class="btn btn-light">Logout</a>
                 {% else %}
@@ -60,5 +66,18 @@
 
     <!-- Custom JavaScript -->
     <script src="{% static 'js/scripts.js' %}"></script>
+
+    <script>
+document.addEventListener("DOMContentLoaded", function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'));
+    var toastList = toastElList.map(function (toastEl) {
+        return new bootstrap.Toast(toastEl, { delay: 3000 }); // Auto-dismiss after 3 seconds
+    });
+    toastList.forEach(toast => toast.show());
+});
+</script>
+
+
+
 </body>
 </html>

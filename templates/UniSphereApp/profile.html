@@ -14,7 +14,11 @@
                 <img src="{{ profile.get_profile_picture_url }}" class="rounded-circle mb-3"
                      style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Picture">
                 {% if is_owner %}
-                    <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
+                    {% if request.user.role == 'society' %}
+                        <a href="{% url 'edit_society_profile' username=request.user.username %}" class="btn btn-primary mb-3">Edit Profile</a>
+                    {% else %}
+                        <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
+                    {% endif %}
                 {% endif %}
             </div>
 

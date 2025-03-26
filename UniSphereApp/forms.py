@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StudentPost, Project, RecruiterProfile, StudentProfile, Comment, FriendRequest
+from .models import StudentPost, Project, SocietyProfile, StudentProfile, Comment, FriendRequest
 
 User = get_user_model()
 
@@ -61,13 +61,38 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['content']
 
-# Recruiter Profile & Student Search Forms
-class RecruiterProfileForm(forms.ModelForm):
+# Society Profile & Student Search Forms
+class CreateBasicSocietyProfileForm(forms.ModelForm):
     class Meta:
-        model = RecruiterProfile
-        fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+        model = SocietyProfile
+        fields = ['full_name', 'profile_picture', 'company_name']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['full_name'].required = True
+        self.fields['profile_picture'].required = False
+        self.fields['company_name'].required = True
+
+class SocietyProfileForm(forms.ModelForm):
+    class Meta:
+        model = SocietyProfile
+        fields = ['profile_picture', 'full_name', 'company_name', 'industry', 'company_website', 'company_description', 'location']
+        widgets = {
+            'company_description': forms.Textarea(attrs={'rows': 4}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        required_fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+
+        for field in required_fields:
+            if not cleaned_data.get(field):
+                self.add_error(field, f"{field.replace('_', ' ').title()} is required!")
+
+        return cleaned_data
 
 class StudentSearchForm(forms.Form):
+    username = forms.CharField(required=False)
     name = forms.CharField(required=False, label="Student Name")
     school = forms.CharField(required=False, label="School")
     course = forms.CharField(required=False, label="Course")
