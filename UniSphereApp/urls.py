@@ -29,9 +29,14 @@ urlpatterns = [
     path('post/<int:post_id>/', views.view_post, name='view_post'),
     path('create_profile_post/', views.create_post, name='create_profile_post'),
 
-    
+
+    #Society    
     path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
 
+    #Search
+    path('search-users/', views.search_users, name='search_users'),
+    path('contact/<int:user_id>/', views.contact_profile, name='contact_profile'),
+    
     # Social Features
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),

@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost, SocietyProfile
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, SearchUserForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -293,23 +293,45 @@ def view_post(request, post_id):
     # Render a template that shows the full post details.
     return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
-def search_students(request):
-    form = StudentSearchForm(request.GET)
-    students = StudentProfile.objects.all()
+@login_required
+def search_users(request):
+    show_results = False
+    students = []
+    societies = []
 
-    if form.is_valid():
-        if form.cleaned_data.get('name'):
-            students = students.filter(user__username__icontains=form.cleaned_data['name'])
-        if form.cleaned_data.get('school'):
-            students = students.filter(school__icontains=form.cleaned_data['school'])
-        if form.cleaned_data.get('course'):
-            students = students.filter(course__icontains=form.cleaned_data['course'])
-        if form.cleaned_data.get('interests'):
-            students = students.filter(interests__icontains=form.cleaned_data['interests'])
-        if form.cleaned_data.get('skills'):
-            students = students.filter(skills__icontains=form.cleaned_data['skills'])
+    # Retrieving form inputs for filtering
+    username = request.GET.get("username", "")
+    name = request.GET.get("name", "")
+    school = request.GET.get("school", "")
+    course = request.GET.get("course", "")
+    interests = request.GET.get("interests", "")
+    skills = request.GET.get("skills", "")
+    society_name = request.GET.get("society_name", "")
+    category = request.GET.get("category", "")
+    description = request.GET.get("description", "")
+    contact_email = request.GET.get("contact_email", "")
 
-    return render(request, 'recruiter/search_students.html', {'form': form, 'students': students})
+    # Search for students
+    student_filters = Q(user__username__icontains=username) | Q(full_name__icontains=name) | \
+                  Q(school__icontains=school) | Q(course__icontains=course) | \
+                  Q(interests__icontains=interests) | Q(skills__icontains=skills)  # Add skills filter
+    students = StudentProfile.objects.filter(student_filters)
+
+    # Search for societies
+    society_filters = Q(society_name__icontains=society_name) | Q(category__icontains=category) | \
+                      Q(description__icontains=description) | Q(contact_email__icontains=contact_email)
+    societies = SocietyProfile.objects.filter(society_filters)
+
+    # Show results if any students or societies are found
+    if students or societies:
+        show_results = True
+
+    # Return the results
+    return render(request, "UniSphereApp/search_users.html", {
+        "show_results": show_results,
+        "students": students,
+        "societies": societies,
+    })
 
 # Social Features
 @login_required
@@ -426,3 +448,17 @@ def edit_society_profile(request):
         form = SocietyProfileForm(instance=profile)
 
     return render(request, 'UniSphereApp/edit_society.html', {'form': form})
+
+@login_required
+def contact_profile(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    
+    # Check if it's a student or a society
+    if user.role == 'student':
+        profile = get_object_or_404(StudentProfile, user=user)
+        email = profile.user.email  # You can adjust this if needed
+    elif user.role == 'society':
+        profile = get_object_or_404(SocietyProfile, user=user)
+        email = profile.contact_email  # Societies might have a separate contact email
+    
+    return render(request, 'UniSphereApp/contact_email.html', {'email': email})

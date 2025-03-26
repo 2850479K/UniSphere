@@ -63,13 +63,19 @@ class CommentForm(forms.ModelForm):
 
 # Student Search Forms
 
-
-class StudentSearchForm(forms.Form):
-    name = forms.CharField(required=False, label="Student Name")
-    school = forms.CharField(required=False, label="School")
-    course = forms.CharField(required=False, label="Course")
-    interests = forms.CharField(required=False, label="Interests")
-    skills = forms.CharField(required=False, label="Skills")
+class SearchUserForm(forms.Form):
+    username = forms.CharField(max_length=100, required=False, label="Username")
+    name = forms.CharField(max_length=100, required=False, label="Full Name")
+    school = forms.CharField(max_length=100, required=False, label="School")
+    course = forms.CharField(max_length=100, required=False, label="Course")
+    interests = forms.CharField(max_length=100, required=False, label="Interests")
+    skills = forms.CharField(max_length=100, required=False, label="Skills")
+    
+    # For Societies
+    society_name = forms.CharField(max_length=255, required=False, label="Society Name")
+    category = forms.CharField(max_length=100, required=False, label="Category")
+    description = forms.CharField(max_length=255, required=False, label="Description")
+    contact_email = forms.EmailField(required=False, label="Contact Email")
 
 
 class SocietyProfileForm(forms.ModelForm):
