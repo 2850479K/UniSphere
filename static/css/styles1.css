@@ -13,19 +13,16 @@
     z-index: 1000;
 }
 
+/* Logo button on the left side */
 .header-left .logo {
-    color: white;
-    text-decoration: none;
-    font-size: 20px;
-    font-weight: bold;
-    transition: 0.3s;
-    padding: 8px 16px;
     background-color: white;
     color: #007bff;
+    font-size: 16px;
+    font-weight: bold;
+    padding: 8px 16px;
     border: none;
     border-radius: 20px;
     cursor: pointer;
-    font-size: 16px;
     text-decoration: none;
     transition: 0.3s;
 }
@@ -36,17 +33,20 @@
     opacity: 0.8;
 }
 
+/* Center header title */
 .header-center h1 {
     margin: 0;
     font-size: 24px;
     font-weight: bold;
 }
 
+/* Right side buttons or links */
 .header-right {
     display: flex;
     gap: 15px;
 }
 
+/* General button styling */
 .btn {
     padding: 8px 16px;
     background-color: white;
@@ -64,6 +64,7 @@
     color: white;
 }
 
+/* Special styling for the logout button */
 .logout-btn {
     background-color: #dc3545;
     color: white;
@@ -73,7 +74,7 @@
     background-color: #b52a3a;
 }
 
-/* Responsive Design */
+/* Responsive Design for smaller screens */
 @media (max-width: 768px) {
     .modern-header {
         flex-direction: column;
@@ -84,4 +85,39 @@
         gap: 10px;
         margin-top: 10px;
     }
+}
+
+/* Ensure html and body take full height */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+/* Page container to fill the viewport height */
+#page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+/* Content wrapper expands to push the footer to the bottom */
+#content-wrap {
+    flex: 1;
+}
+
+/* Header styles (if any additional custom styles are needed, add them here) */
+
+/* Footer styles */
+footer {
+    background-color: #fff; /* White background for the footer */
+}
+
+footer a {
+    text-decoration: none;
+    color: #0a66c2;
+}
+
+footer a:hover {
+    text-decoration: underline;
 }
