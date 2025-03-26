@@ -4,7 +4,6 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.models import User
 from django.db import models
 from django.conf import settings
-from setuptools.command.easy_install import auto_chmod
 from django.contrib.auth.models import AbstractUser
 import os
 
@@ -65,7 +64,7 @@ class SocietyProfile(models.Model):
     company_description = models.TextField(blank=False, null=False)
     location = models.CharField(max_length=255,blank=False, null=False)
     company_website = models.URLField(blank=False, null=False)
-    saved_students = models.ManyToManyField('StudentProfile', related_name='saved_by_society', blank=True)
+    members = models.ManyToManyField('StudentProfile', related_name='members_of_societies', blank=True)
 
     def get_profile_picture_url(self):
         if self.profile_picture:

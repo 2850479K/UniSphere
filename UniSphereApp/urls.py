@@ -1,7 +1,7 @@
 from django.urls import path
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.views import LogoutView
-from .views import create_society_profile, society_dashboard,contact_student, save_student, saved_students, unsave_student
+from .views import create_society_profile, contact_student, join_society, remove_member, search_users, members
 from . import views
 
 
@@ -35,11 +35,11 @@ urlpatterns = [
     path('society/profile/<str:username>/', views.society_profile, name='society_profile'),
     path('society/create-profile/', views.create_society_profile, name='create_society_profile'),
     path('society/edit-profile/<str:username>/', views.edit_society_profile, name='edit_society_profile'),
-    path("society/dashboard/", society_dashboard, name="society_dashboard"),
+    path('search/', views.search_users, name='search'),
     path('society/contact/<int:student_id>/', views.contact_student, name='contact_student'),
-    path('society/save/<int:student_id>/', save_student, name='save_student'),
-    path('society/saved-students/', views.saved_students, name='saved_students'),
-    path('society/unsave/<int:student_id>/', unsave_student, name='unsave_student'),
+    path('society/join/<int:society_id>/', join_society, name='join_society'),
+    path('members/', views.members, name='members'),
+    path('society/remove_member/<int:student_id>/', remove_member, name='remove_member'),
 
     # Social Features
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),

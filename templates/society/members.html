@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block title %}Members of {{ society.user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ society.user.username }}'s Members</h2>
+
+    {% if members %}
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Profile Picture</th>
+                    <th>Username</th>
+                    <th>Full Name</th>
+                    <th>School</th>
+                    <th>Skills</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for member in members %}
+                    <tr>
+                        <td><img src="{{ member.get_profile_picture_url }}" alt="Profile Picture" width="60"></td>
+                        <td>{{ member.user.username }}</td>
+                        <td>{{ member.full_name }}</td>
+                        <td>{{ member.school|default:"N/A" }}</td>
+                        <td>{{ member.skills|default:"N/A" }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No members have joined yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

@@ -177,4 +177,30 @@
 .post-caption {
     margin-bottom: 8px;
     font-size: 14px;
+    }
+
+.badge-student,
+.badge-society {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 8px;
+    margin-left: 6px;
+    border-radius: 999px;
+    vertical-align: middle;
+    line-height: 1;
+    position: relative;
+    top: -1px;
+}
+
+.badge-student {
+    background-color: rgba(102, 16, 242, 0.1);
+    color: #6610f2;
+    border: 1px solid #6610f2;
+}
+
+.badge-society {
+    background-color: rgba(0, 123, 255, 0.1);
+    color: #007bff;
+    border: 1px solid #007bff;
 }

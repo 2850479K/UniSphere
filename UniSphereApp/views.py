@@ -7,41 +7,55 @@ from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.http import require_POST
 
 from .models import (
-    Project, StudentPost, PostFile, RecruiterProfile, SocietyProfile, StudentProfile,
+    Project, StudentPost, PostFile, SocietyProfile, StudentProfile,
     Comment, Like, Share, FriendRequest, SharedPost
 )
 
 from .forms import (
-    ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm,
+    ProjectForm, StudentPostForm, UserRegisterForm,
     SocietyProfileForm, StudentSearchForm, StudentProfileForm,
     CreateProfileForm, EditProfileForm, CreateBasicSocietyProfileForm
 )
 
 User = get_user_model()
 
-# def home(request):
-#     # Get all public posts
-#     public_posts = StudentPost.objects.filter(user__studentprofile__visibility='public')
-#
-#     if request.user.is_authenticated:
-#         friends = get_friends(request.user)
-#         # Get private posts from friends (users with StudentProfile.visibility == 'private')
-#         private_posts = StudentPost.objects.filter(
-#             user__studentprofile__visibility='private',
-#             user__in=friends
-#         )
-#         # Combine public and private posts; union() requires similar QuerySets.
-#         posts = public_posts.union(private_posts).order_by('-timestamp')
-#     else:
-#         posts = public_posts.order_by('-timestamp')
-#
-#     return render(request, 'UniSphereApp/home.html', {'posts': posts})
-
 def home(request):
+    form = StudentSearchForm(request.GET or None)
+    students = StudentProfile.objects.select_related('user').filter(visibility='public')
+    show_results = False
+
+    if form.is_valid() and any(form.cleaned_data.values()):
+        username = form.cleaned_data.get('username')
+        name = form.cleaned_data.get('name')
+        school = form.cleaned_data.get('school')
+        course = form.cleaned_data.get('course')
+        interests = form.cleaned_data.get('interests')
+        skills = form.cleaned_data.get('skills')
+
+        if username:
+            students = students.filter(user__username__icontains=username)
+        if name:
+            students = students.filter(full_name__icontains=name)
+        if school:
+            students = students.filter(school__icontains=school)
+        if course:
+            students = students.filter(course__icontains=course)
+        if interests:
+            students = students.filter(interests__icontains=interests)
+        if skills:
+            students = students.filter(skills__icontains=skills)
+
+        show_results = True
     posts = StudentPost.objects.filter(
         Q(project__isnull=True) | Q(project__isnull=False, user__studentprofile__visibility='public')
     ).order_by('-timestamp')
-    return render(request, 'UniSphereApp/home.html', {'posts': posts})
+
+    return render(request, 'UniSphereApp/home.html', {
+        'posts': posts,
+        'form': form,
+        'students': students,
+        'show_results': show_results,
+    })
 
 def register(request):
     if request.method == 'POST':
@@ -324,32 +338,8 @@ def view_post(request, post_id):
     # Render a template that shows the full post details.
     return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
-def search_students(request):
-    form = StudentSearchForm(request.GET)
-    students = StudentProfile.objects.all()
-
 
 # Society Profile & Student Search
-
-@login_required
-def create_society_profile(request):
-    existing_profile = SocietyProfile.objects.filter(user=request.user).first()
-
-    if request.method == "POST":
-        form = SocietyProfileForm(request.POST, request.FILES)
-        if form.is_valid():
-            profile = form.save(commit=False)
-            profile.user = request.user
-            profile.save()
-            messages.success(request, "Successfully created profile!")
-            return redirect(f"/society/profile/{request.user.username}/")
-        else:
-            messages.error(request, "Please fill in all required fields!")
-
-    else:
-        form = SocietyProfileForm()
-
-    return render(request, "society/create_profile.html", {"form": form})
 
 @login_required
 def create_society_profile(request):
@@ -401,15 +391,13 @@ def society_profile(request, username):
         "society_profile": society_profile,
     })
 
-
-@login_required
-def society_dashboard(request):
+def search_users(request):
     form = StudentSearchForm(request.GET or None)
-    students = StudentProfile.objects.select_related('user').filter(visibility='public')
     show_results = False
+    students = StudentProfile.objects.all()  # Fetch all student profiles
+    societies = SocietyProfile.objects.all()  # Fetch all society profiles
 
     if form.is_valid() and any(form.cleaned_data.values()):
-        students = StudentProfile.objects.all()
         username = form.cleaned_data.get('username')
         name = form.cleaned_data.get('name')
         school = form.cleaned_data.get('school')
@@ -417,6 +405,7 @@ def society_dashboard(request):
         interests = form.cleaned_data.get('interests')
         skills = form.cleaned_data.get('skills')
 
+        # Apply filters to students
         if username:
             students = students.filter(user__username__icontains=username)
         if name:
@@ -430,13 +419,26 @@ def society_dashboard(request):
         if skills:
             students = students.filter(skills__icontains=skills)
 
+        # Apply filters to societies (make sure you aren't filtering students here)
+        if username:
+            societies = societies.filter(user__username__icontains=username)
+        if name:
+            societies = societies.filter(full_name__icontains=name)
+        if school:
+            societies = societies.filter(company_name__icontains=school)
+        if course:
+            societies = societies.filter(industry__icontains=course)
+        if interests:
+            societies = societies.filter(company_description__icontains=interests)
+
         show_results = True
-    return render(request, 'society/dashboard.html', {
+
+    return render(request, 'UniSphereApp/search_users.html', {
         'form': form,
         'students': students,
+        'societies': societies,
         'show_results': show_results,
     })
-
 
 @login_required
 def contact_student(request, student_id):
@@ -447,33 +449,31 @@ def contact_student(request, student_id):
 
 
 @login_required
-def save_student(request, student_id):
-    student = get_object_or_404(StudentProfile, id=student_id)
-    society = request.user.societyprofile
+def join_society(request, society_id):
+    society = get_object_or_404(SocietyProfile, id=society_id)
+    student_profile = request.user.studentprofile  # Assuming the user is a student
+    
+    # Add student to the society's members list
+    society.members.add(student_profile)
+    messages.success(request, f"You have successfully joined {society.company_name}!")
 
-    if student in society.saved_students.all():
-        return JsonResponse({"message": "Already Saved"}, status=400)
-
-    society.saved_students.add(student)
-    return JsonResponse({"message": "Student Saved", "status": "saved"})
-
-@login_required
-def saved_students(request):
-    society = request.user.societyprofile
-    saved_students = society.saved_students.all()
-    return render(request, 'society/saved_students.html', {
-        'saved_students': saved_students
-    })
+    return redirect('society_profile', username=society.user.username)
 
 @login_required
-def unsave_student(request, student_id):
+def members(request):
+    society = request.user.societyprofile
+    members = society.members.all() 
+    return render(request, 'society/members.html', {'members': members})
+
+@login_required
+def remove_member(request, student_id):
     society = request.user.societyprofile
     student = get_object_or_404(StudentProfile, id=student_id)
 
     if student in society.saved_students.all():
         society.saved_students.remove(student)
 
-    return redirect('saved_students')
+    return JsonResponse({"message": "Student removed", "status": "removed"})
 
 
 # Social Features

@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="container my-4 feed-container">
-    <!-- Create Post Button for logged-in users (profile posts) -->
+    <!-- Create Post Button -->
     {% if request.user.is_authenticated %}
     <div class="mb-3">
         <a href="{% url 'create_profile_post' %}" class="btn btn-success">Create Post</a>
@@ -17,20 +17,27 @@
         <!-- Post Header -->
         <div class="post-header d-flex align-items-center mb-2">
             <div class="profile-pic-wrapper">
-                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}"
+                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% elif post.user.societyprofile.profile_picture %}{{ post.user.societyprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}"
                      alt="Profile Picture"
                      class="profile-pic"
                      style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
             </div>
             <div class="ms-2">
-                <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
-                    {{ post.user.username }}
-                </a><br>
+                <div class="d-flex align-items-center gap-2">
+                    <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
+                        {{ post.user.username }}
+                    </a>
+                    {% if post.user.role == "student" %}
+                        <span class="badge-student">Student</span>
+                    {% elif post.user.role == "society" %}
+                        <span class="badge-society">Society</span>
+                    {% endif %}
+                </div>
                 <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
             </div>
         </div>
 
-        <!-- Post Thumbnail (if available) -->
+        <!-- Post Thumbnail -->
         {% if post.files.all %}
         <div class="post-thumbnail mb-2">
             {% for file in post.files.all|slice:":1" %}
@@ -52,7 +59,7 @@
                 {{ post.caption }}
             </p>
             <div class="d-flex align-items-center gap-3">
-                <!-- AJAX-Enabled Like Button -->
+                <!-- Like Button -->
                 <button type="button"
                         class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
                         data-post-id="{{ post.id }}">
@@ -63,7 +70,7 @@
                     {% endif %}
                     <span class="like-count">({{ post.likes.count }})</span>
                 </button>
-                <!-- Comment button navigates to full post view -->
+                <!-- Comment and Share Buttons -->
                 <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
                 <button class="btn btn-sm btn-outline-secondary">Share</button>
             </div>
