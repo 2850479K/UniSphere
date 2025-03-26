@@ -29,7 +29,7 @@ urlpatterns = [
     path('post/<int:post_id>/', views.view_post, name='view_post'),
     path('create_profile_post/', views.create_post, name='create_profile_post'),
 
-    # Recruiter & Student Search
+    path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
     
 
     # Social Features

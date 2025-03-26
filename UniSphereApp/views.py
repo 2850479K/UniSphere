@@ -10,24 +10,6 @@ from django.views.decorators.http import require_POST
 
 User = get_user_model()
 
-# def home(request):
-#     # Get all public posts
-#     public_posts = StudentPost.objects.filter(user__studentprofile__visibility='public')
-#
-#     if request.user.is_authenticated:
-#         friends = get_friends(request.user)
-#         # Get private posts from friends (users with StudentProfile.visibility == 'private')
-#         private_posts = StudentPost.objects.filter(
-#             user__studentprofile__visibility='private',
-#             user__in=friends
-#         )
-#         # Combine public and private posts; union() requires similar QuerySets.
-#         posts = public_posts.union(private_posts).order_by('-timestamp')
-#     else:
-#         posts = public_posts.order_by('-timestamp')
-#
-#     return render(request, 'UniSphereApp/home.html', {'posts': posts})
-
 def home(request):
     posts = StudentPost.objects.filter(
         Q(project__isnull=True) | Q(project__isnull=False, user__studentprofile__visibility='public')
@@ -419,3 +401,19 @@ def share_post(request, post_id):
 def shared_posts_list(request):
     shared_posts = SharedPost.objects.filter(user=request.user).order_by('-timestamp')
     return render(request, 'UniSphereApp/shared_posts.html', {'shared_posts': shared_posts})
+
+
+@login_required
+def edit_society_profile(request):
+    profile = get_object_or_404(SocietyProfile, user=request.user)
+
+    if request.method == 'POST':
+        form = SocietyProfileForm(request.POST, request.FILES, instance=profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Society profile updated successfully!")
+            return redirect('profile', username=request.user.username)
+    else:
+        form = SocietyProfileForm(instance=profile)
+
+    return render(request, 'UniSphereApp/edit_society.html', {'form': form})

@@ -71,13 +71,15 @@ class StudentSearchForm(forms.Form):
     interests = forms.CharField(required=False, label="Interests")
     skills = forms.CharField(required=False, label="Skills")
 
-# Social
-class FriendRequestForm(forms.ModelForm):
-    class Meta:
-        model = FriendRequest
-        fields = []
 
 class SocietyProfileForm(forms.ModelForm):
     class Meta:
         model = SocietyProfile
-        fields = ['society_name', 'description', 'website', 'logo']
+        fields = [
+            'society_name',
+            'description',
+            'website',
+            'category',
+            'social_links',
+            'contact_email',
+        ]
