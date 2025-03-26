@@ -5,6 +5,8 @@ from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, RecruiterProfile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, RecruiterProfileForm, StudentSearchForm, StudentProfileForm, CreateProfileForm, EditProfileForm
+from django.http import JsonResponse
+
 
 User = get_user_model()
 
@@ -72,7 +74,10 @@ def profile(request, username):
     projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5] 
 
     is_owner = request.user == profile_user  
+    is_friend = profile.friends.filter(user=request.user).exists() 
 
+    friend_request_sent = FriendRequest.objects.filter(from_user=request.user, to_user=profile_user, status='pending').exists()
+    friend_request_received = FriendRequest.objects.filter(from_user=profile_user, to_user=request.user, status='pending').exists()
 
     if profile.visibility == "private" and not is_owner:
         return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
@@ -85,6 +90,9 @@ def profile(request, username):
             "projects": projects,  
             "profile_user": profile_user, 
             "is_owner": is_owner,
+            "is_friend": is_friend,
+            "friend_request_sent": friend_request_sent,
+            "friend_request_received": friend_request_received,
         }
     )
 
@@ -327,26 +335,32 @@ def view_all_comments(request, post_id):
 def send_friend_request(request, user_id):
     to_user = get_object_or_404(User, id=user_id)
     if request.user != to_user:
-        FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+        friend_request, created = FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user, status=FriendRequest.PENDING)
+        if not created:
+            return JsonResponse({"message": "Friend request already sent."})
     return JsonResponse({"message": "Friend request sent"})
 
 @login_required
 def accept_friend_request(request, request_id):
-    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
-    friend_request.accepted = True
+    friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user, status=FriendRequest.PENDING)
+    friend_request.status = FriendRequest.ACCEPTED
     friend_request.save()
-    return JsonResponse({"message": "Friend request accepted"})
+
+    friend_request.from_user.studentprofile.friends.add(friend_request.to_user.studentprofile)
+    friend_request.to_user.studentprofile.friends.add(friend_request.from_user.studentprofile)
+
+    return redirect('profile', username=request.user.username)
 
 @login_required
 def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
-    return JsonResponse({"message": "Friend request declined"})
+    return redirect('profile', username=request.user.username)
 
 @login_required
 def friend_requests(request):
-    requests = FriendRequest.objects.filter(to_user=request.user, accepted=False)
-    return render(request, 'UniSphereApp/friend_requests.html', {'request':requests})  
+    requests = FriendRequest.objects.filter(to_user=request.user, status=FriendRequest.PENDING)
+    return render(request, 'UniSphereApp/friend_requests.html', {'requests': requests})
 
 @login_required
 def share_post(request, post_id):
