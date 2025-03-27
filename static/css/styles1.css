@@ -220,3 +220,35 @@ footer a {
 footer a:hover {
     text-decoration: underline;
 }
+
+.badge-role {
+  display: inline-block;
+  font-size: 0.75rem;
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  margin-left: 10px;
+  line-height: 1;
+  background-color: #f4f4f4;
+  border: 1px solid transparent;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+}
+
+.badge-role {
+  font-size: 0.65rem;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-weight: 500;
+  vertical-align: middle;
+}
+
+.badge-student {
+  background-color: #b983ff; /* Softer lavender */
+  color: white;
+}
+
+.badge-society {
+  background-color: #75c798; /* Soft green */
+  color: white;
+}

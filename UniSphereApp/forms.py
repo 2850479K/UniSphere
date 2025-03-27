@@ -20,6 +20,7 @@ class CreateProfileForm(forms.ModelForm):
         model = StudentProfile
         fields = ['full_name', 'gender', 'profile_picture']
 
+
 class StudentProfileForm(forms.ModelForm):
     delete_picture = forms.BooleanField(required=False, label="Delete profile picture")
 
@@ -44,16 +45,20 @@ class ProjectForm(forms.ModelForm):
         fields = ['title', 'description']
 
 class StudentPostForm(forms.ModelForm):
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.none(),
+        required=False,
+        label="Select Project (optional)",
+        empty_label="Post to profile (no project)"
+    )
     files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': False}), required=False
+        widget=forms.ClearableFileInput(attrs={'multiple': False}),
+        required=False
     )
 
     class Meta:
         model = StudentPost
-        fields = ['title', 'caption']
-        required = {
-            'files': False
-        }
+        fields = ['title', 'caption', 'project']
 
 class CommentForm(forms.ModelForm):
     class Meta:

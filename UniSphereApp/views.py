@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
-from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost, SocietyProfile
+from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, Repost, SocietyProfile
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, SearchUserForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm, SocietyCreateProfileForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -13,10 +13,12 @@ User = get_user_model()
 def home(request):
     if not request.user.is_authenticated:
         return redirect('welcomepage')
+
     posts = StudentPost.objects.filter(
-        Q(user__role='society') |
+        Q(user__role='society') | 
         Q(user__role='student', user__studentprofile__visibility='public')
     ).order_by('-timestamp')
+
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
 def welcomepage(request):
@@ -65,7 +67,18 @@ def custom_login(request):
 def profile_posts(request, username):
     user = get_object_or_404(User, username=username)
     posts = StudentPost.objects.filter(user=user).order_by('-timestamp')
-    return render(request, 'UniSphereApp/profile_posts.html', {'profile': user.studentprofile, 'posts': posts})
+
+    if user.role == 'student':
+        profile = get_object_or_404(StudentProfile, user=user)
+    elif user.role == 'society':
+        profile = get_object_or_404(SocietyProfile, user=user)
+    else:
+        profile = None
+
+    return render(request, 'UniSphereApp/profile_posts.html', {
+        'profile': profile,
+        'posts': posts
+    })
 
 @login_required
 def create_profile(request):
@@ -98,6 +111,7 @@ def create_profile(request):
             form = SocietyCreateProfileForm(instance=profile)
 
         return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+
 
 
 def profile(request, username):
@@ -184,7 +198,7 @@ def remove_friend(request, user_id):
         except Exception as e:
             messages.error(request, "Something went wrong while removing the friend.")
 
-        return redirect('friend_requests', username=request.user.username)
+        return redirect('friend_requests', username=request.user.username) 
 
     return redirect('friend_requests', username=request.user.username)
 
@@ -278,34 +292,34 @@ def delete_project(request, project_id):
 # Posts
 @login_required
 def create_post(request, project_id=None):
-    """
-    Create a new post.
-    If project_id is provided, the post is created under that project.
-    If not, the post is created as a profile post (project is set to None).
-    """
-    project = get_object_or_404(Project, id=project_id) if project_id else None
+    project_instance = None
+    if project_id:
+        project_instance = get_object_or_404(Project, id=project_id, user=request.user)
 
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES)
+        form.fields['project'].queryset = Project.objects.filter(user=request.user)
+
         files = request.FILES.getlist('files')
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
-            post.project = project  
+            post.project = project_instance or form.cleaned_data.get('project')  # use URL one if passed
             post.save()
             for file in files:
                 PostFile.objects.create(post=post, file=file)
             messages.success(request, "Post added successfully!")
-            if project:
-                return redirect('project', project_id=project.id)
+            if post.project:
+                return redirect('project', project_id=post.project.id)
             else:
                 return redirect('profile', username=request.user.username)
-        else:
-            messages.error(request, "Error adding post. Please check the form.")
     else:
         form = StudentPostForm()
+        form.fields['project'].queryset = Project.objects.filter(user=request.user)
+        if project_instance:
+            form.fields['project'].initial = project_instance
 
-    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
+    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project_instance})
 
 @login_required
 def edit_post(request, post_id):
@@ -313,7 +327,10 @@ def edit_post(request, post_id):
 
     if request.user != post.user:
         messages.error(request, "You are not authorized to edit this post.")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=post.user.username)
 
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES, instance=post)
@@ -329,10 +346,12 @@ def edit_post(request, post_id):
                 PostFile.objects.create(post=post, file=file)
 
             messages.success(request, "Post updated successfully!")
-            return redirect('project', project_id=post.project.id)
+            if post.project:
+                return redirect('project', project_id=post.project.id)
+            else:
+                return redirect('profile', username=post.user.username)
         else:
             messages.error(request, "Error updating post. Please check the form.")
-
     else:
         form = StudentPostForm(instance=post)
         existing_files = PostFile.objects.filter(post=post)
@@ -345,14 +364,23 @@ def delete_post(request, post_id):
 
     if post.user != request.user:
         messages.error(request, "You are not authorized to delete this post.")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=post.user.username)
 
     if request.method == "POST":
         post.delete()
         messages.success(request, "Post deleted successfully!")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=request.user.username)
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=request.user.username)
 
 def view_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
@@ -453,7 +481,10 @@ def like_post(request, post_id):
             "likes_count": post.likes.count()
         })
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=post.user.username)
 
 @login_required
 def add_comment(request, post_id):
@@ -464,9 +495,12 @@ def add_comment(request, post_id):
         if content:
             Comment.objects.create(user=request.user, post=post, content=content)
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=post.user.username)
 
-@login_required
+
 def view_all_comments(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
     comments = post.comments.all().order_by('-created_at')
@@ -500,7 +534,7 @@ def accept_friend_request(request, request_id):
 def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
-    return redirect('friend_requests')
+    return redirect('friend_requests', username=request.user.username)
 
 
 def student_friends_and_requests(request, username):
@@ -513,6 +547,7 @@ def student_friends_and_requests(request, username):
     requests = []
     if is_owner:
         requests = FriendRequest.objects.filter(to_user=request.user, status=FriendRequest.PENDING)
+
     return render(request, 'UniSphereApp/friend_requests.html', {
         'student_profile': student_profile,
         'user_friends': user_friends,
@@ -524,18 +559,22 @@ def student_friends_and_requests(request, username):
 def share_post(request, post_id):
     original_post = get_object_or_404(StudentPost, id=post_id)
 
-    if SharedPost.objects.filter(user=request.user, original_post=original_post).exists():
+    if Repost.objects.filter(user=request.user, original_post=original_post).exists():
         messages.warning(request, "You have already shared this post.")
     else:
-        SharedPost.objects.create(user=request.user, original_post=original_post)
+        Repost.objects.create(user=request.user, original_post=original_post)
         messages.success(request, "Post shared successfully!")
 
-    return redirect('shared_posts_list')
+    return redirect('user_reposts', username=request.user.username)
 
-@login_required
-def shared_posts_list(request):
-    shared_posts = SharedPost.objects.filter(user=request.user).order_by('-timestamp')
-    return render(request, 'UniSphereApp/shared_posts.html', {'shared_posts': shared_posts})
+def user_reposts(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    reposts = Repost.objects.filter(user=profile_user).order_by('-timestamp')
+
+    return render(request, 'UniSphereApp/user_reposts.html', {
+        'profile_user': profile_user,
+        'reposts': reposts,
+    })
 
 @login_required
 def edit_society_profile(request):
@@ -614,7 +653,7 @@ def society_members(request, society_username):
     })
     
 
-@login_required
+
 def joined_societies(request, username):
     student_user = get_object_or_404(User, username=username, role='student')
     student_profile = get_object_or_404(StudentProfile, user=student_user)

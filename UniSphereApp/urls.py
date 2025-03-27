@@ -43,17 +43,16 @@ urlpatterns = [
     path('contact/<int:user_id>/', views.contact_profile, name='contact_profile'),
     
     # Social Features
-    path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('post/<int:post_id>/comments/', views.get_comments, name='get_comments'),
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
-    path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
+    path('profile/<str:username>/reposts/', views.user_reposts, name='user_reposts'),
     path("like-post/<int:post_id>/", views.like_post, name="like_post"),
 
     # Friend Requests
     path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),
     path('friend-request/accept/<int:request_id>/', views.accept_friend_request, name='accept_friend_request'),
     path('friend-request/decline/<int:request_id>/', views.decline_friend_request, name='decline_friend_request'),
-    path('friends/<str:username>/', views.student_friends_and_requests, name='friend_requests'),
+    path('friends/<str:username>/', views.student_friends_and_requests, name='friend_requests'), 
     path('remove_friend/<int:user_id>/', views.remove_friend, name='remove_friend'),
 ]

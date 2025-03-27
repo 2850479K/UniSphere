@@ -16,6 +16,9 @@
                     <a href="{% url 'edit_society_profile' %}" class="btn btn-primary">Edit Profile</a>
                 {% endif %}
                 <a href="{% url 'society_members' profile_user.username %}" class="btn btn-outline-primary">View Members</a>
+                <a href="{% url 'user_reposts' profile_user.username %}" class="btn btn-outline-secondary mt-2">
+    View Reposts
+</a>
                 {% if user.is_authenticated and user.role == 'student' %}
 <form method="post" style="display: inline;">
     {% csrf_token %}

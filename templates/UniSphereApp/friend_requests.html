@@ -1,49 +1,15 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Friend Requests - UniSphere{% endblock %}
+{% block title %}Friends & Friend Requests{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-3">Friend Requests</h2>
-    {% if requests %}
-        <div class="row">
-            {% for request in requests %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <img src="{{ request.from_user.studentprofile.get_profile_picture_url }}"
-                             class="rounded-circle mb-3"
-                             width="80" height="80" alt="Profile Picture">
-                        <h5 class="card-title mb-1">
-                            {{ request.from_user.studentprofile.full_name|default:request.from_user.username }}
-                        </h5>
+    <h2 class="mb-3">{{ student_profile.user.username }}'s Friends</h2>
 
-                        <div class="mt-3">
-                            <form action="{% url 'accept_friend_request' request.id %}" method="POST" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-success btn-sm">Accept</button>
-                            </form>
-                            <form action="{% url 'decline_friend_request' request.id %}" method="POST" class="d-inline">
-                                {% csrf_token %}
-                                <button type="submit" class="btn btn-danger btn-sm">Decline</button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    {% else %}
-        <p>No pending friend requests.</p>
-    {% endif %}
-
-    <hr class="my-4">
-
-    <h2>Your Friends</h2>
-{% if user.studentprofile.friends.all %}
+    {% if user_friends %}
     <div class="row">
-        {% for friend in user.studentprofile.friends.all %}
+        {% for friend in user_friends %}
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
@@ -58,53 +24,54 @@
                         View Profile
                     </a>
 
-                    {% if is_owner and friend %}
-    <form action="{% url 'remove_friend' friend.user.id %}" method="POST" class="mt-2">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-outline-danger btn-sm">Remove Friend</button>
-    </form>
-{% endif %}
+                    {% if is_owner %}
+                    <form action="{% url 'remove_friend' friend.user.id %}" method="POST" class="mt-2">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm">Remove Friend</button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
         {% endfor %}
     </div>
-{% else %}
-    <p class="text-muted">No friends yet.</p>
-{% endif %}
+    {% else %}
+        <p class="text-muted">No friends yet.</p>
+    {% endif %}
 
+    {% if is_owner %}
     <hr class="my-4">
+    <h2 class="mb-3">Friend Requests</h2>
 
-    {% if profile_user %}
-    <div class="card p-4 mt-3">
-        {% if is_owner %}
-            <p class="text-info">This is your own profile. No friend actions needed.</p>
-        {% else %}
-            {% if is_friend %}
-                <p class="text-success">You are friends with {{ profile_user.username }}</p>
-            {% elif friend_request_sent %}
-                <p class="text-warning">Friend request sent. Awaiting approval.</p>
-                <form action="{% url 'decline_friend_request' profile_user.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Cancel Request</button>
-                </form>
-            {% elif friend_request_received %}
-                <form action="{% url 'accept_friend_request' profile_user.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-success">Accept Friend Request</button>
-                </form>
-                <form action="{% url 'decline_friend_request' profile_user.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger">Decline</button>
-                </form>
-            {% else %}
-                <form action="{% url 'send_friend_request' profile_user.id %}" method="POST">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-outline-primary">Send Friend Request</button>
-                </form>
-            {% endif %}
-        {% endif %}
+    {% if requests %}
+    <div class="row">
+        {% for request in requests %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <img src="{{ request.from_user.studentprofile.get_profile_picture_url }}"
+                         class="rounded-circle mb-3"
+                         width="80" height="80" alt="Profile Picture">
+                    <h5 class="card-title mb-1">
+                        {{ request.from_user.studentprofile.full_name|default:request.from_user.username }}
+                    </h5>
+
+                    <form action="{% url 'accept_friend_request' request.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success btn-sm">Accept</button>
+                    </form>
+                    <form action="{% url 'decline_friend_request' request.id %}" method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
+    {% else %}
+        <p class="text-muted">No pending friend requests.</p>
+    {% endif %}
     {% endif %}
 </div>
 {% endblock %}

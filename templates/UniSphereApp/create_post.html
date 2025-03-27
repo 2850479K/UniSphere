@@ -6,31 +6,41 @@
 {% endblock %}
 
 {% block content %}
-<div class="container mt-5 mt-5">
+<div class="container mt-5">
   <div class="card shadow-lg rounded p-4 mx-auto" style="max-width: 600px;">
     <h2 class="card-title text-center mb-4">
       {% if project %}Create Post for {{ project.title }}{% else %}Create New Post{% endif %}
     </h2>
-    <form method="POST" enctype="multipart/form-data" class="custom-form">
+    <form method="POST" enctype="multipart/form-data">
       {% csrf_token %}
+
+      {% if not project %}
+      <div class="mb-3">
+        <label for="id_project" class="form-label">Select Project (optional)</label>
+        <select name="project" id="id_project" class="form-select">
+          <option value="">Post to profile (no project)</option>
+          {% for p in request.user.project_set.all %}
+            <option value="{{ p.id }}">{{ p.title }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      {% endif %}
+
       <div class="mb-3">
         <label for="id_title" class="form-label">Title</label>
-        {{ form.title }}
-        {% if form.title.errors %}
-          <div class="text-danger small">{{ form.title.errors }}</div>
-        {% endif %}
+        <input type="text" name="title" class="form-control" id="id_title" required>
       </div>
+
       <div class="mb-3">
         <label for="id_caption" class="form-label">Caption</label>
-        {{ form.caption }}
-        {% if form.caption.errors %}
-          <div class="text-danger small">{{ form.caption.errors }}</div>
-        {% endif %}
+        <textarea name="caption" class="form-control" id="id_caption" rows="4" required></textarea>
       </div>
+
       <div class="mb-4">
         <label for="id_files" class="form-label">Attach Files</label>
         <input type="file" name="files" id="id_files" class="form-control" multiple>
       </div>
+
       <button type="submit" class="btn btn-primary w-100 py-2 rounded">Post</button>
     </form>
   </div>
