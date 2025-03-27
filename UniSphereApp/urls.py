@@ -43,11 +43,10 @@ urlpatterns = [
     path('contact/<int:user_id>/', views.contact_profile, name='contact_profile'),
     
     # Social Features
-    path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('post/<int:post_id>/comments/', views.get_comments, name='get_comments'),
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
-    path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
+    path('profile/<str:username>/reposts/', views.user_reposts, name='user_reposts'),
     path("like-post/<int:post_id>/", views.like_post, name="like_post"),
 
     # Friend Requests

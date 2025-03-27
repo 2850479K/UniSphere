@@ -537,10 +537,14 @@ def share_post(request, post_id):
 
     return redirect('shared_posts_list')
 
-@login_required
-def shared_posts_list(request):
-    shared_posts = SharedPost.objects.filter(user=request.user).order_by('-timestamp')
-    return render(request, 'UniSphereApp/shared_posts.html', {'shared_posts': shared_posts})
+def user_reposts(request, username):
+    profile_user = get_object_or_404(User, username=username)
+    reposts = SharedPost.objects.filter(user=profile_user).order_by('-timestamp')
+
+    return render(request, 'UniSphereApp/user_reposts.html', {
+        'profile_user': profile_user,
+        'reposts': reposts,
+    })
 
 @login_required
 def edit_society_profile(request):

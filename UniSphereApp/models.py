@@ -154,3 +154,4 @@ class SocietyProfile(models.Model):
 
     def __str__(self):
         return self.society_name or self.user.username
+
