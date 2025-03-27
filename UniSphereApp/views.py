@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
-from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost, SocietyProfile
+from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, Repost, SocietyProfile
 from .forms import ProjectForm, StudentPostForm, UserRegisterForm, SearchUserForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm, SocietyCreateProfileForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
@@ -529,17 +529,17 @@ def friend_requests(request):
 def share_post(request, post_id):
     original_post = get_object_or_404(StudentPost, id=post_id)
 
-    if SharedPost.objects.filter(user=request.user, original_post=original_post).exists():
+    if Repost.objects.filter(user=request.user, original_post=original_post).exists():
         messages.warning(request, "You have already shared this post.")
     else:
-        SharedPost.objects.create(user=request.user, original_post=original_post)
+        Repost.objects.create(user=request.user, original_post=original_post)
         messages.success(request, "Post shared successfully!")
 
-    return redirect('shared_posts_list')
+    return redirect('user_reposts', username=request.user.username)
 
 def user_reposts(request, username):
     profile_user = get_object_or_404(User, username=username)
-    reposts = SharedPost.objects.filter(user=profile_user).order_by('-timestamp')
+    reposts = Repost.objects.filter(user=profile_user).order_by('-timestamp')
 
     return render(request, 'UniSphereApp/user_reposts.html', {
         'profile_user': profile_user,
