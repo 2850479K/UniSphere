@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ society.society_name }} Members{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h2 class="mb-2">
+            {{ society.society_name }} Members
+            <span class="badge bg-secondary">{{ members|length }}</span>
+        </h2>
+
+        {% if user.is_authenticated and user.role == 'student' %}
+        <form method="POST" class="ms-2" data-bs-toggle="tooltip" title="{% if is_member %}Click to leave this society{% else %}Click to join this society{% endif %}">
+            {% csrf_token %}
+            {% if is_member %}
+                <button type="submit" name="action" value="leave" class="btn btn-outline-danger">
+                    <i class="bi bi-box-arrow-left me-1"></i> Leave Society
+                </button>
+            {% else %}
+                <button type="submit" name="action" value="join" class="btn btn-success">
+                    <i class="bi bi-plus-circle me-1"></i> Join Society
+                </button>
+            {% endif %}
+        </form>
+        {% endif %}
+    </div>
+
+    {% if members %}
+    <div class="row">
+        {% for student in members %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <img src="{{ student.get_profile_picture_url }}" class="rounded-circle mb-3" width="80" height="80" alt="Profile Picture">
+                    <h5 class="card-title mb-1">{{ student.full_name|default:student.user.username }}</h5>
+
+                    {% if student.school %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-mortarboard"></i> <strong>School:</strong> {{ student.school }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.course %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-journal-bookmark"></i> <strong>Course:</strong> {{ student.course }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.skills %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-tools"></i> <strong>Skills:</strong> {{ student.skills }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.interests %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-lightbulb"></i> <strong>Interests:</strong> {{ student.interests }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.languages %}
+                        <p class="card-text text-muted">
+                            <i class="bi bi-translate"></i> <strong>Languages:</strong> {{ student.languages }}
+                        </p>
+                    {% endif %}
+
+                    <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="bi bi-person-circle"></i> View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>No members have joined this society yet.</p>
+    {% endif %}
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+            new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>
+{% endblock %}

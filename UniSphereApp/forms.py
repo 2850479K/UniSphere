@@ -88,4 +88,10 @@ class SocietyProfileForm(forms.ModelForm):
             'category',
             'social_links',
             'contact_email',
+            'logo',  
         ]
+
+class SocietyCreateProfileForm(forms.ModelForm):
+    class Meta:
+        model = SocietyProfile
+        fields = ['society_name']

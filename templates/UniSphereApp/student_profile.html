@@ -17,6 +17,7 @@
                     <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
                     <a href="{% url 'friend_requests' %}" class="btn btn-warning mb-3">Friend Requests</a>
                 {% endif %}
+                <a href="{% url 'joined_societies' profile_user.username %}" class="btn btn-outline-primary">View Societies</a>
             </div>
 
             {% if profile.full_name and profile.full_name != "Not set" %}
