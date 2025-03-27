@@ -27,7 +27,7 @@ SECRET_KEY = 'ee&cqz0e58ea7t*f+xkqrfo34nud#60hls!cj&6sr5%d#0dyib'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['2850479k.pythonanywhere.com', 'www.2850479k.pythonanywhere.com']
 
 
 AUTH_USER_MODEL = 'UniSphereApp.User'

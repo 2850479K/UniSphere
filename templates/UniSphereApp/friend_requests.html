@@ -41,29 +41,37 @@
     <hr class="my-4">
 
     <h2>Your Friends</h2>
-    {% if user.studentprofile.friends.all %}
-        <div class="row">
-            {% for friend in user.studentprofile.friends.all %}
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-body text-center">
-                        <img src="{{ friend.get_profile_picture_url }}"
-                             class="rounded-circle mb-3"
-                             width="80" height="80" alt="Profile Picture">
-                        <h5 class="card-title mb-1">
-                            {{ friend.full_name|default:friend.user.username }}
-                        </h5>
-                        <a href="{% url 'profile' friend.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
-                            View Profile
-                        </a>
-                    </div>
+{% if user.studentprofile.friends.all %}
+    <div class="row">
+        {% for friend in user.studentprofile.friends.all %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <img src="{{ friend.get_profile_picture_url }}"
+                         class="rounded-circle mb-3"
+                         width="80" height="80" alt="Profile Picture">
+                    <h5 class="card-title mb-1">
+                        {{ friend.full_name|default:friend.user.username }}
+                    </h5>
+
+                    <a href="{% url 'profile' friend.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
+                        View Profile
+                    </a>
+
+                    {% if is_owner and friend %}
+    <form action="{% url 'remove_friend' friend.user.id %}" method="POST" class="mt-2">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger btn-sm">Remove Friend</button>
+    </form>
+{% endif %}
                 </div>
             </div>
-            {% endfor %}
         </div>
-    {% else %}
-        <p class="text-muted">No friends yet.</p>
-    {% endif %}
+        {% endfor %}
+    </div>
+{% else %}
+    <p class="text-muted">No friends yet.</p>
+{% endif %}
 
     <hr class="my-4">
 

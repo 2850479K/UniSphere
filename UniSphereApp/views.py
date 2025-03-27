@@ -50,7 +50,7 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  # AJAX request
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
                 return JsonResponse({"message": "Login successful!", "redirect": "my_profile"}, status=200)
             messages.success(request, "You have successfully logged in.")
             return redirect('my_profile')
@@ -64,7 +64,6 @@ def custom_login(request):
 def profile_posts(request, username):
     user = get_object_or_404(User, username=username)
     posts = StudentPost.objects.filter(user=user).order_by('-timestamp')
-    # Ensure you have a template at UniSphereApp/profile_posts.html
     return render(request, 'UniSphereApp/profile_posts.html', {'profile': user.studentprofile, 'posts': posts})
 
 @login_required
@@ -85,7 +84,6 @@ def create_profile(request):
         profile, created = SocietyProfile.objects.get_or_create(user=request.user)
 
         if created:
-            # Automatically set contact_email from user.email on first profile creation
             profile.contact_email = request.user.email
             profile.save()
 
@@ -101,10 +99,10 @@ def create_profile(request):
         return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 
-@login_required
+
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    is_owner = (request.user == profile_user)
+    is_owner = request.user.is_authenticated and request.user == profile_user
     is_friend = False
     friend_request_sent = False
 
@@ -113,17 +111,21 @@ def profile(request, username):
         projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
         recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
         user_friends = profile.friends.all()
-        if not is_owner and request.user.role == 'student' and profile_user.role == 'student':
-            if profile in request.user.studentprofile.friends.all():
-                is_friend = True
-            else:
-                from .models import FriendRequest
-                if FriendRequest.objects.filter(
-                        from_user=request.user,
-                        to_user=profile_user,
-                        status='PENDING'
-                    ).exists():
+
+        if request.user.is_authenticated and not is_owner and request.user.role == 'student':
+            try:
+                current_student_profile = StudentProfile.objects.get(user=request.user)
+                if profile in current_student_profile.friends.all():
+                    is_friend = True
+                elif FriendRequest.objects.filter(
+                    from_user=request.user,
+                    to_user=profile_user,
+                    status='pending' 
+                ).exists():
                     friend_request_sent = True
+            except StudentProfile.DoesNotExist:
+                pass  
+
         if profile.visibility == "private" and not is_owner:
             return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
@@ -148,16 +150,17 @@ def profile(request, username):
 
         if request.user.is_authenticated and request.user.role == 'student':
             student_profile = StudentProfile.objects.filter(user=request.user).first()
-            is_member = profile.members.filter(id=student_profile.id).exists()
+            if student_profile:
+                is_member = profile.members.filter(id=student_profile.id).exists()
 
-            if request.method == 'POST':
-                action = request.POST.get('action')
-                if action == 'join' and not is_member:
-                    profile.members.add(student_profile)
-                    is_member = True
-                elif action == 'leave' and is_member:
-                    profile.members.remove(student_profile)
-                    is_member = False
+                if request.method == 'POST':
+                    action = request.POST.get('action')
+                    if action == 'join' and not is_member:
+                        profile.members.add(student_profile)
+                        is_member = True
+                    elif action == 'leave' and is_member:
+                        profile.members.remove(student_profile)
+                        is_member = False
 
         return render(request, "UniSphereApp/society_profile.html", {
             "profile": profile,
@@ -172,10 +175,18 @@ def profile(request, username):
 def remove_friend(request, user_id):
     if request.method == 'POST':
         target_user = get_object_or_404(User, id=user_id)
-        request.user.studentprofile.friends.remove(target_user.studentprofile)
-        target_user.studentprofile.friends.remove(request.user.studentprofile)
-        return JsonResponse({"message": f"Removed friend {target_user.username}."})
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+        try:
+            request.user.studentprofile.friends.remove(target_user.studentprofile)
+            target_user.studentprofile.friends.remove(request.user.studentprofile)
+
+            messages.success(request, f"You removed {target_user.username} from your friends.")
+        except Exception as e:
+            messages.error(request, "Something went wrong while removing the friend.")
+
+        return redirect('friend_requests') 
+
+    return redirect('friend_requests')
 
 @login_required
 def my_profile(request):
@@ -280,7 +291,7 @@ def create_post(request, project_id=None):
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
-            post.project = project  # Will be None for profile posts
+            post.project = project  
             post.save()
             for file in files:
                 PostFile.objects.create(post=post, file=file)
@@ -345,7 +356,6 @@ def delete_post(request, post_id):
 
 def view_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
-    # Render a template that shows the full post details.
     return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
 
@@ -354,7 +364,6 @@ def search_users(request):
     societies = []
     show_results = False
 
-    # Get form input values
     username = request.GET.get("username", "").strip()
     name = request.GET.get("name", "").strip()
     school = request.GET.get("school", "").strip()
@@ -366,11 +375,9 @@ def search_users(request):
     description = request.GET.get("description", "").strip()
     contact_email = request.GET.get("contact_email", "").strip()
 
-    # True if any field is filled
     if any([username, name, school, course, interests, skills, society_name, category, description, contact_email]):
         show_results = True
 
-        # Filter students
         student_filters = Q()
         if username:
             student_filters &= Q(user__username=username)
@@ -385,10 +392,9 @@ def search_users(request):
         if skills:
             student_filters &= Q(skills=skills)
 
-        if student_filters:  # Only query if there's something to filter
+        if student_filters:  
             students = StudentProfile.objects.filter(student_filters)
 
-        # Filter societies ONLY IF society-related fields are filled
         society_filters = Q()
         if username:
             society_filters &= Q(user__username=username)
@@ -441,14 +447,12 @@ def like_post(request, post_id):
         Like.objects.create(user=request.user, post=post)
         liked = True
 
-    # If AJAX request, return JSON
     if request.headers.get("x-requested-with") == "XMLHttpRequest":
         return JsonResponse({
             "liked": liked,
             "likes_count": post.likes.count()
         })
 
-    # Otherwise, fallback to regular redirect
     return redirect('project', project_id=post.project.id)
 
 @login_required
@@ -469,20 +473,17 @@ def view_all_comments(request, post_id):
     return render(request, 'UniSphereApp/all_comments.html', {'post': post, 'comments': comments})
 
 
+@require_POST
 @login_required
 def send_friend_request(request, user_id):
-    if request.method == 'POST':
-        to_user = get_object_or_404(User, id=user_id)
-        if to_user == request.user:
-            return JsonResponse({"error": "Cannot send friend request to yourself."}, status=400)
-        from .models import FriendRequest
-        friend_request, created = FriendRequest.objects.update_or_create(
-            from_user=request.user,
-            to_user=to_user,
-            defaults={'status': FriendRequest.PENDING}
-        )
-        return JsonResponse({"message": "Friend request sent."})
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+    to_user = get_object_or_404(User, id=user_id)
+    if request.user != to_user:
+        friend_request, created = FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+        if created:
+            return JsonResponse({"message": "Friend request sent"})
+        else:
+            return JsonResponse({"message": "Friend request already exists"}, status=400)
+    return JsonResponse({"error": "Cannot send request to yourself"}, status=400)
 
 @login_required
 def accept_friend_request(request, request_id):
@@ -504,7 +505,14 @@ def decline_friend_request(request, request_id):
 @login_required
 def friend_requests(request):
     requests = FriendRequest.objects.filter(to_user=request.user, status=FriendRequest.PENDING)
-    return render(request, 'UniSphereApp/friend_requests.html', {'requests': requests})
+    student_profile = get_object_or_404(StudentProfile, user=request.user)
+    is_owner = True 
+
+    return render(request, 'UniSphereApp/friend_requests.html', {
+        'requests': requests,
+        'is_owner': is_owner,
+        'student_profile': student_profile,
+    })
 
 @login_required
 def share_post(request, post_id):
@@ -536,7 +544,6 @@ def edit_society_profile(request):
         if form.is_valid():
             profile = form.save()
 
-            # Sync the contact_email back to user.email
             if profile.contact_email:
                 request.user.email = profile.contact_email
                 request.user.save()
@@ -552,43 +559,54 @@ def edit_society_profile(request):
 def contact_profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
     
-    # Check if it's a student or a society
     if user.role == 'student':
         profile = get_object_or_404(StudentProfile, user=user)
-        email = profile.user.email  # You can adjust this if needed
+        email = profile.user.email  
     elif user.role == 'society':
         profile = get_object_or_404(SocietyProfile, user=user)
-        email = profile.contact_email  # Societies might have a separate contact email
+        email = profile.contact_email 
     
     return render(request, 'UniSphereApp/contact_email.html', {'email': email})
 
-@login_required
 def society_members(request, society_username):
-    society_user = get_object_or_404(User, username=society_username, role='society')
+    society_user = get_object_or_404(User, username=society_username)
     society = get_object_or_404(SocietyProfile, user=society_user)
+    members = society.members.all()
 
     is_member = False
     student_profile = None
 
-    if request.user.role == 'student':
-        student_profile = get_object_or_404(StudentProfile, user=request.user)
+    if request.user.is_authenticated and request.user.role == 'student':
+        student_profile = StudentProfile.objects.filter(user=request.user).first()
         is_member = society.members.filter(id=student_profile.id).exists()
 
-        if request.method == 'POST':
-            action = request.POST.get('action')
-            if action == 'join' and not is_member:
-                society.members.add(student_profile)
-                is_member = True
-            elif action == 'leave' and is_member:
-                society.members.remove(student_profile)
-                is_member = False
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'leave' and is_member:
+            society.members.remove(student_profile)
+            messages.success(request, "You have left the society.")
+            return redirect('society_members', society_username=society_username)
+
+        elif action == 'join' and not is_member:
+            society.members.add(student_profile)
+            messages.success(request, "You have joined the society.")
+            return redirect('society_members', society_username=society_username)
+
+        elif action == 'kick' and request.user == society_user and request.user.role == 'society':
+            student_id = request.POST.get('student_id')
+            student_to_remove = StudentProfile.objects.filter(id=student_id).first()
+            if student_to_remove:
+                society.members.remove(student_to_remove)
+                messages.success(request, f"{student_to_remove.full_name or student_to_remove.user.username} was removed.")
+            return redirect('society_members', society_username=society_username)
 
     return render(request, 'UniSphereApp/society_members.html', {
         'society': society,
-        'members': society.members.all(),
+        'members': members,
         'is_member': is_member,
-        'student_profile': student_profile,
     })
+    
 
 @login_required
 def joined_societies(request, username):

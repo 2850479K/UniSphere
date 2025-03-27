@@ -14,20 +14,21 @@
                 {% if is_owner %}
                     <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
                 {% else %}
-                    {% if is_friend %}
-                        <button type="button" class="btn btn-danger remove-friend mb-3" data-target-id="{{ profile_user.id }}">
-                            Remove Friend
-                        </button>
-
-                    {% elif friend_request_sent %}
-                        <button type="button" class="btn btn-secondary mb-3" disabled>
-                            Request Sent
-                        </button>
-                    {% else %}
-                        <button type="button" class="btn btn-send-request btn-outline-primary mb-3" data-target-id="{{ profile_user.id }}">
-                            Send Friend Request
-                        </button>
-                    {% endif %}
+                    {% if request.user.is_authenticated and request.user.role == "student" and not is_owner %}
+    {% if is_friend %}
+        <button type="button" class="btn btn-danger remove-friend mb-3" data-target-id="{{ profile_user.id }}">
+            Remove Friend
+        </button>
+    {% elif friend_request_sent %}
+        <button type="button" class="btn btn-secondary mb-3" disabled>
+            Request Sent
+        </button>
+    {% else %}
+        <button type="button" class="btn btn-send-request btn-outline-primary mb-3" data-target-id="{{ profile_user.id }}">
+            Send Friend Request
+        </button>
+    {% endif %}
+{% endif %}
                 {% endif %}
                 <a href="{% url 'friend_requests' %}" class="btn btn-warning mb-3">Friend List</a>
                 <a href="{% url 'joined_societies' profile_user.username %}" class="btn btn-outline-primary mb-3">
