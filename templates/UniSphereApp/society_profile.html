@@ -15,8 +15,8 @@
                      style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Picture">
                 {% if is_owner %}
                     <a href="{% url 'edit_society_profile' %}" class="btn btn-primary">Edit Profile</a>
-<a href="{% url 'society_members' profile_user.username %}" class="btn btn-outline-primary">View Members</a>
                 {% endif %}
+                <a href="{% url 'society_members' profile_user.username %}" class="btn btn-outline-primary">View Members</a>
                 {% if user.is_authenticated and user.role == 'student' %}
 <form method="post" style="display: inline;">
     {% csrf_token %}
