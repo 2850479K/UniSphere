@@ -324,17 +324,17 @@ def search_users(request):
         # Filter students
         student_filters = Q()
         if username:
-            student_filters &= Q(user__username__icontains=username)
+            student_filters &= Q(user__username=username)
         if name:
-            student_filters &= Q(full_name__icontains=name)
+            student_filters &= Q(full_name=name)
         if school:
-            student_filters &= Q(school__icontains=school)
+            student_filters &= Q(school=school)
         if course:
-            student_filters &= Q(course__icontains=course)
+            student_filters &= Q(course=course)
         if interests:
-            student_filters &= Q(interests__icontains=interests)
+            student_filters &= Q(interests=interests)
         if skills:
-            student_filters &= Q(skills__icontains=skills)
+            student_filters &= Q(skills=skills)
 
         if student_filters:  # Only query if there's something to filter
             students = StudentProfile.objects.filter(student_filters)
@@ -342,13 +342,13 @@ def search_users(request):
         # Filter societies ONLY IF society-related fields are filled
         society_filters = Q()
         if society_name:
-            society_filters &= Q(society_name__icontains=society_name)
+            society_filters &= Q(society_name=society_name)
         if category:
-            society_filters &= Q(category__icontains=category)
+            society_filters &= Q(category=category)
         if description:
-            society_filters &= Q(description__icontains=description)
+            society_filters &= Q(description=description)
         if contact_email:
-            society_filters &= Q(contact_email__icontains=contact_email)
+            society_filters &= Q(contact_email=contact_email)
 
         if any([society_name, category, description, contact_email]):
             societies = SocietyProfile.objects.filter(society_filters)
