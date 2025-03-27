@@ -564,28 +564,45 @@ def contact_profile(request, user_id):
     
     return render(request, 'UniSphereApp/contact_email.html', {'email': email})
 
-@login_required
 def society_members(request, society_username):
-    society_user = get_object_or_404(User, username=society_username, role='society')
+    society_user = get_object_or_404(User, username=society_username)
     society = get_object_or_404(SocietyProfile, user=society_user)
+    members = society.members.all()
 
     is_member = False
     student_profile = None
 
-    if request.user.role == 'student':
-        student_profile = get_object_or_404(StudentProfile, user=request.user)
+    if request.user.is_authenticated and request.user.role == 'student':
+        student_profile = StudentProfile.objects.filter(user=request.user).first()
         is_member = society.members.filter(id=student_profile.id).exists()
 
-        if request.method == 'POST':
-            action = request.POST.get('action')
-            if action == 'join' and not is_member:
-                society.members.add(student_profile)
-                is_member = True
-            elif action == 'leave' and is_member:
-                society.members.remove(student_profile)
-                is_member = False
-                
-        return redirect('profile', username=society_user.username)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+
+        if action == 'leave' and is_member:
+            society.members.remove(student_profile)
+            messages.success(request, "You have left the society.")
+            return redirect('society_members', society_username=society_username)
+
+        elif action == 'join' and not is_member:
+            society.members.add(student_profile)
+            messages.success(request, "You have joined the society.")
+            return redirect('society_members', society_username=society_username)
+
+        elif action == 'kick' and request.user == society_user and request.user.role == 'society':
+            student_id = request.POST.get('student_id')
+            student_to_remove = StudentProfile.objects.filter(id=student_id).first()
+            if student_to_remove:
+                society.members.remove(student_to_remove)
+                messages.success(request, f"{student_to_remove.full_name or student_to_remove.user.username} was removed.")
+            return redirect('society_members', society_username=society_username)
+
+    # ✅ Always return a response here
+    return render(request, 'UniSphereApp/society_members.html', {
+        'society': society,
+        'members': members,
+        'is_member': is_member,
+    })
     
 
 @login_required

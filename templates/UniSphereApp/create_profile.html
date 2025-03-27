@@ -1,25 +1,36 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}Create Profile - UniSphere{% endblock %}
+{% block title %}Complete Your Profile - UniSphere{% endblock %}
 
 {% block content %}
-<div class="container d-flex justify-content-center align-items-center" style="height: 80vh;">
-    <div class="card shadow-lg p-4" style="width: 100%; max-width: 500px;">
-        <h2 class="text-center mb-4">Complete Your Profile</h2>
-        <form method="POST" enctype="multipart/form-data">
+<div class="container d-flex justify-content-center align-items-center" style="height: 95vh;">
+<div class="card shadow-lg p-4 edit-profile-card">
+<h2 class="text-center mb-4 fw-bold text-primary">Complete Your Profile</h2>
+
+        {% if form.errors %}
+<div class="alert alert-danger">
+<ul>
+                    {% for field, error in form.errors.items %}
+<li>{{ field|title }}: {{ error|join:", " }}</li>
+                    {% endfor %}
+</ul>
+</div>
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="custom-form">
             {% csrf_token %}
             {% for field in form %}
-                <div class="mb-3">
-                    {{ field.label_tag }}
+<div class="mb-3">
+<label class="form-label fw-semibold">{{ field.label }}</label>
                     {{ field }}
                     {% if field.errors %}
-                        <small class="text-danger">{{ field.errors|striptags }}</small>
+<small class="text-danger">{{ field.errors|striptags }}</small>
                     {% endif %}
-                </div>
+</div>
             {% endfor %}
-            <button type="submit" class="btn btn-success w-100">Save Profile</button>
-        </form>
-    </div>
+<button type="submit" class="btn btn-success w-100 rounded-3">Save Profile</button>
+</form>
+</div>
 </div>
 {% endblock %}

@@ -65,9 +65,20 @@
                         </p>
                     {% endif %}
 
-                    <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
-                        <i class="bi bi-person-circle"></i> View Profile
-                    </a>
+                    <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-primary btn-sm mt-2 me-2">
+    <i class="bi bi-person-circle"></i> View Profile
+</a>
+
+{% if user.is_authenticated and user == society.user %}
+    <form method="post" style="display: inline;">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="kick">
+        <input type="hidden" name="student_id" value="{{ student.id }}">
+        <button type="submit" class="btn btn-danger btn-sm mt-2">
+            <i class="bi bi-person-x"></i> Kick
+        </button>
+    </form>
+{% endif %}
                 </div>
             </div>
         </div>
