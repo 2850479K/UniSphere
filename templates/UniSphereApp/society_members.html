@@ -28,20 +28,45 @@
 
     {% if members %}
     <div class="row">
-        {% for member in members %}
+        {% for student in members %}
         <div class="col-md-6 col-lg-4 mb-4">
             <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
-                    <img src="{{ member.get_profile_picture_url }}" alt="Profile Picture" class="rounded-circle mb-3" width="80" height="80">
-                    <h5 class="card-title mb-1">{{ member.full_name|default:member.user.username }}</h5>
-                    <p class="card-text text-muted mb-1">
-                        <i class="bi bi-mortarboard-fill me-1"></i><strong>School:</strong> {{ member.school|default:"N/A" }}
-                    </p>
-                    <p class="card-text text-muted">
-                        <i class="bi bi-tools me-1"></i><strong>Skills:</strong> {{ member.skills|default:"N/A" }}
-                    </p>
-                    <a href="{% url 'profile' member.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
-                        <i class="bi bi-person-circle me-1"></i> View Profile
+                    <img src="{{ student.get_profile_picture_url }}" class="rounded-circle mb-3" width="80" height="80" alt="Profile Picture">
+                    <h5 class="card-title mb-1">{{ student.full_name|default:student.user.username }}</h5>
+
+                    {% if student.school %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-mortarboard"></i> <strong>School:</strong> {{ student.school }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.course %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-journal-bookmark"></i> <strong>Course:</strong> {{ student.course }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.skills %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-tools"></i> <strong>Skills:</strong> {{ student.skills }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.interests %}
+                        <p class="card-text text-muted mb-0">
+                            <i class="bi bi-lightbulb"></i> <strong>Interests:</strong> {{ student.interests }}
+                        </p>
+                    {% endif %}
+
+                    {% if student.languages %}
+                        <p class="card-text text-muted">
+                            <i class="bi bi-translate"></i> <strong>Languages:</strong> {{ student.languages }}
+                        </p>
+                    {% endif %}
+
+                    <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="bi bi-person-circle"></i> View Profile
                     </a>
                 </div>
             </div>
@@ -54,7 +79,6 @@
 </div>
 
 <script>
-    // Enable tooltips
     document.addEventListener("DOMContentLoaded", function () {
         var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
         tooltipTriggerList.forEach(function (tooltipTriggerEl) {

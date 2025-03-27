@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model, authenticate, login
 from django.db.models import Q
 from .models import Project, StudentPost, PostFile, StudentProfile, Comment, Like, Share, FriendRequest, SharedPost, SocietyProfile
-from .forms import ProjectForm, StudentPostForm, UserRegisterForm, SearchUserForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm
+from .forms import ProjectForm, StudentPostForm, UserRegisterForm, SearchUserForm, StudentProfileForm, CreateProfileForm, EditProfileForm, SocietyProfileForm, SocietyCreateProfileForm
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 
@@ -62,6 +62,7 @@ def profile_posts(request, username):
 def create_profile(request):
     if request.user.role == 'student':
         profile, created = StudentProfile.objects.get_or_create(user=request.user)
+
         if request.method == 'POST':
             form = CreateProfileForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
@@ -70,19 +71,24 @@ def create_profile(request):
                 return redirect('profile', username=request.user.username)
         else:
             form = CreateProfileForm(instance=profile)
-        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
     elif request.user.role == 'society':
         profile, created = SocietyProfile.objects.get_or_create(user=request.user)
+
         if request.method == 'POST':
-            form = SocietyProfileForm(request.POST, request.FILES, instance=profile)
+            form = SocietyCreateProfileForm(request.POST, instance=profile)
             if form.is_valid():
                 form.save()
                 messages.success(request, "Society profile created successfully!")
                 return redirect('profile', username=request.user.username)
         else:
-            form = SocietyProfileForm(instance=profile)
-        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+            form = SocietyCreateProfileForm(instance=profile)
+
+    else:
+        messages.error(request, "Invalid user role.")
+        return redirect('home')
+
+    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
@@ -138,8 +144,6 @@ def profile(request, username):
 @login_required
 def my_profile(request):
     return redirect('profile', username=request.user.username)
-
-
 
 @login_required
 def edit_profile(request):
@@ -256,7 +260,6 @@ def create_post(request, project_id=None):
 
     return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
 
-
 @login_required
 def edit_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
@@ -303,7 +306,6 @@ def delete_post(request, post_id):
         return redirect('project', project_id=post.project.id)
 
     return redirect('project', project_id=post.project.id)
-
 
 def view_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
@@ -380,7 +382,6 @@ def get_comments(request, post_id):
         for c in comments
     ]
     return JsonResponse({"comments": comments_data})
-
 
 def get_friends(user):
     sent = FriendRequest.objects.filter(from_user=user, accepted=True).values_list('to_user', flat=True)
@@ -465,7 +466,6 @@ def share_post(request, post_id):
 def shared_posts_list(request):
     shared_posts = SharedPost.objects.filter(user=request.user).order_by('-timestamp')
     return render(request, 'UniSphereApp/shared_posts.html', {'shared_posts': shared_posts})
-
 
 @login_required
 def edit_society_profile(request):

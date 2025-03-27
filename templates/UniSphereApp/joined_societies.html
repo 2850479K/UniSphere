@@ -1,15 +1,16 @@
 {% extends 'base.html' %}
 {% load static %}
 
-
-{% block title %}Joined Societies - {{ student_profile.full_name|default:student_profile.user.username }}{% endblock %}
+{% block title %}Joined Societies{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h2 class="mb-3">
-        Societies Joined 
-        <span class="badge bg-secondary">{{ societies|length }}</span>
-    </h2>
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap">
+        <h2 class="mb-2">
+            Societies Joined
+            <span class="badge bg-secondary">{{ societies|length }}</span>
+        </h2>
+    </div>
 
     {% if societies %}
     <div class="row">
@@ -18,13 +19,33 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body text-center">
                     <img src="{% static 'images/default_pfp.jpeg' %}" class="rounded-circle mb-3" width="80" height="80" alt="Society">
+
                     <h5 class="card-title mb-1">{{ society.society_name }}</h5>
-                    <p class="card-text text-muted mb-1">
-                        <i class="bi bi-grid-fill me-1"></i><strong>Category:</strong> {{ society.category|default:"N/A" }}
+
+                    {% if society.category %}
+                    <p class="card-text text-muted mb-0">
+                        <i class="bi bi-tags"></i> <strong>Category:</strong> {{ society.category }}
                     </p>
-                    <p class="card-text text-muted">
-                        <i class="bi bi-envelope me-1"></i><strong>Email:</strong> {{ society.contact_email|default:"N/A" }}
+                    {% endif %}
+
+                    {% if society.description %}
+                    <p class="card-text text-muted mb-0">
+                        <i class="bi bi-info-circle"></i> <strong>Description:</strong> {{ society.description }}
                     </p>
+                    {% endif %}
+
+                    {% if society.contact_email %}
+                    <p class="card-text text-muted mb-0">
+                        <i class="bi bi-envelope"></i> <strong>Contact:</strong> {{ society.contact_email }}
+                    </p>
+                    {% endif %}
+
+                    {% if society.website %}
+                    <p class="card-text text-muted mb-0">
+                        <i class="bi bi-globe"></i> <a href="{{ society.website }}" target="_blank">Website</a>
+                    </p>
+                    {% endif %}
+
                     <a href="{% url 'profile' society.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
                         <i class="bi bi-building"></i> View Profile
                     </a>
@@ -34,7 +55,7 @@
         {% endfor %}
     </div>
     {% else %}
-        <p>This student hasn’t joined any societies yet.</p>
+        <p>You haven't joined any societies yet.</p>
     {% endif %}
 </div>
 {% endblock %}
