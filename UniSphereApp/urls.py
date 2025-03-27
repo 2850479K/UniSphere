@@ -15,6 +15,7 @@ urlpatterns = [
     path('profile/', views.my_profile, name='my_profile'),
     path('welcome/', views.welcomepage, name='welcomepage'),
     path('about/', views.about, name='about'),
+    path('profile/<str:username>/posts/', views.profile_posts, name='profile_posts'),
 
     # Portfolio & Projects
     path('portfolio/create_project/', views.create_project, name='create_project'),
@@ -28,17 +29,24 @@ urlpatterns = [
     path('portfolio/editpost/<int:post_id>/', views.edit_post, name='edit_post'),
     path('portfolio/deletepost/<int:post_id>/', views.delete_post, name='delete_post'),
     path('post/<int:post_id>/comments/all/', views.view_all_comments, name='view_all_comments'),
+    path('post/<int:post_id>/', views.view_post, name='view_post'),
+    path('create_profile_post/', views.create_post, name='create_profile_post'),
 
-    # Recruiter & Student Search
-    path('search-students/', views.search_students, name='search_students'),
 
+    #Society    
+    path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
+
+    #Search
+    path('search-users/', views.search_users, name='search_users'),
+    path('contact/<int:user_id>/', views.contact_profile, name='contact_profile'),
+    
     # Social Features
-    path('post/<int:post_id>/like/', views.like_post, name='like_post'),
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('post/<int:post_id>/comment/', views.add_comment, name='add_comment'),
     path('post/<int:post_id>/comments/', views.get_comments, name='get_comments'),
     path('post/<int:post_id>/share/', views.share_post, name='share_post'),
     path('shared-posts/', views.shared_posts_list, name='shared_posts_list'),
+    path("like-post/<int:post_id>/", views.like_post, name="like_post"),
 
     # Friend Requests
     path('friend-request/send/<int:user_id>/', views.send_friend_request, name='send_friend_request'),

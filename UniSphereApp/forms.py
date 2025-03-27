@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StudentPost, Project, RecruiterProfile, StudentProfile, Comment, FriendRequest
+from .models import StudentPost, Project, StudentProfile, Comment, FriendRequest, SocietyProfile
 
 User = get_user_model()
 
@@ -61,21 +61,31 @@ class CommentForm(forms.ModelForm):
         model = Comment
         fields = ['content']
 
-# Recruiter Profile & Student Search Forms
-class RecruiterProfileForm(forms.ModelForm):
-    class Meta:
-        model = RecruiterProfile
-        fields = ['company_name', 'industry', 'company_website', 'company_description', 'location']
+# Student Search Forms
 
-class StudentSearchForm(forms.Form):
-    name = forms.CharField(required=False, label="Student Name")
-    school = forms.CharField(required=False, label="School")
-    course = forms.CharField(required=False, label="Course")
-    interests = forms.CharField(required=False, label="Interests")
-    skills = forms.CharField(required=False, label="Skills")
+class SearchUserForm(forms.Form):
+    username = forms.CharField(max_length=100, required=False, label="Username")
+    name = forms.CharField(max_length=100, required=False, label="Full Name")
+    school = forms.CharField(max_length=100, required=False, label="School")
+    course = forms.CharField(max_length=100, required=False, label="Course")
+    interests = forms.CharField(max_length=100, required=False, label="Interests")
+    skills = forms.CharField(max_length=100, required=False, label="Skills")
+    
+    # For Societies
+    society_name = forms.CharField(max_length=255, required=False, label="Society Name")
+    category = forms.CharField(max_length=100, required=False, label="Category")
+    description = forms.CharField(max_length=255, required=False, label="Description")
+    contact_email = forms.EmailField(required=False, label="Contact Email")
 
-# Social
-class FriendRequestForm(forms.ModelForm):
+
+class SocietyProfileForm(forms.ModelForm):
     class Meta:
-        model = FriendRequest
-        fields = []
+        model = SocietyProfile
+        fields = [
+            'society_name',
+            'description',
+            'website',
+            'category',
+            'social_links',
+            'contact_email',
+        ]

@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Profile - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <!-- Main Profile Card -->
+    <div class="card shadow-lg p-4 text-center" style="width: 100%; max-width: 600px; margin: auto;">
+        <h2 class="mb-4">{{ profile_user.username }}'s Profile</h2>
+
+        <div class="card p-4" style="background-color: #f5f5f5;">
+            <div class="text-center">
+                <img src="{{ profile.get_profile_picture_url }}" class="rounded-circle mb-3"
+                     style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Picture">
+                {% if is_owner %}
+                    <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
+                {% endif %}
+            </div>
+
+            {% if profile.full_name and profile.full_name != "Not set" %}
+                <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
+            {% endif %}
+
+            {% if profile.gender and profile.gender != "Not set" %}
+                <p><strong>Gender:</strong> {{ profile.gender }}</p>
+            {% endif %}
+
+            {% if profile.school and profile.school != "Not set" %}
+                <p><strong>School:</strong> {{ profile.school }}</p>
+            {% endif %}
+
+            {% if profile.bio and profile.bio != "Not set" %}
+                <p><strong>Bio:</strong> {{ profile.bio }}</p>
+            {% endif %}
+
+            {% if profile.interests and profile.interests != "Not set" %}
+                <p><strong>Interests:</strong> {{ profile.interests }}</p>
+            {% endif %}
+
+            {% if profile.languages and profile.languages != "Not set" %}
+                <p><strong>Languages:</strong> {{ profile.languages }}</p>
+            {% endif %}
+        </div>
+
+        <!-- Recent Projects Section -->
+<h3 class="mt-4">Your Recent Projects</h3>
+{% if projects %}
+    <div class="row mt-3">
+        {% for project in projects %}
+            <div class="col-md-4 mb-3">
+                <div class="card shadow-sm p-3">
+                    <h5>{{ project.title }}</h5>
+                    <p>{{ project.description|truncatechars:100 }}</p>
+                    <a href="{% url 'project' project.id %}" class="btn btn-outline-primary btn-sm">View Project</a>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="{% url 'user_portfolio' profile_user.username %}" class="btn btn-primary mt-3" style="width: auto;">View More Projects</a>
+{% else %}
+    <p class="text-muted">No projects yet.
+        {% if is_owner %}
+            <a href="{% url 'create_project' %}" class="btn btn-success">Create One</a>
+        {% endif %}
+    </p>
+{% endif %}
+
+        <hr class="my-4"/>
+
+        <!-- Recent Posts Section -->
+        <h3>Recent Posts</h3>
+        <div class="row mt-3">
+            {% for post in recent_posts %}
+            <div class="col-md-4 mb-3">
+                <!-- Wrap each post in a link to its detail view -->
+                <a href="{% url 'view_post' post.id %}" class="text-decoration-none text-reset">
+                    <div class="card shadow-sm">
+                        {% if post.files.all %}
+                            {% for file in post.files.all|slice:":1" %}
+                                {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                                    <img src="{{ file.file.url }}" class="card-img-top" alt="Post image">
+                                {% else %}
+                                    <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <img src="{% static 'images/default_post.jpg' %}" class="card-img-top" alt="Default post image">
+                        {% endif %}
+                        <div class="card-body p-2">
+                            <p class="card-text">{{ post.caption|truncatechars:50 }}</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12">
+                <p class="text-muted text-center">No posts available.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="text-center mt-3">
+            <a href="{% url 'profile_posts' profile_user.username %}" class="btn btn-primary" style="width: auto;">View All Posts</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,17 +1,27 @@
+
 {% extends 'base.html' %}
 
 {% block title %}Create Project{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <h1>Create a New Project</h1>
+<div class="container mt-5 d-flex justify-content-center">
+    <div class="card shadow p-5 rounded-4 edit-profile-card">
+        <h2 class="text-center mb-4 fw-bold text-primary">Create a New Project</h2>
 
-    <form method="POST">
-        {% csrf_token %}
-        {{ form.as_p }}
-
-        <button type="submit" class="btn btn-success">Create Project</button>
-        <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-secondary">Cancel</a>
-    </form>
+        <form method="POST" class="custom-form">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="form-text text-danger">{{ field.errors|striptags }}</div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-success w-100 rounded-3">Create Project</button>
+            <a href="{% url 'user_portfolio' request.user.username %}" class="btn btn-secondary w-100 rounded-3 mt-2">Cancel</a>
+        </form>
+    </div>
 </div>
 {% endblock %}

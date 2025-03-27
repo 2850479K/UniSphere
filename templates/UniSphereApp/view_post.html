@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}View Post - UniSphere{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-lg p-4">
+        <!-- Post Header -->
+        <div class="d-flex align-items-center mb-3">
+            <div class="profile-pic-wrapper" style="width:50px; height:50px; border-radius:50%; overflow:hidden; margin-right:10px;">
+                <a href="{% url 'profile' post.user.username %}">
+                    <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}" class="img-fluid" alt="{{ post.user.username }}'s profile picture">
+                </a>
+            </div>
+            <div>
+                <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
+                    {{ post.user.username }}
+                </a>
+                <br>
+                <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
+            </div>
+        </div>
+
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.caption }}</p>
+
+        <!-- Display Post Images -->
+        {% for file in post.files.all %}
+            {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                <img src="{{ file.file.url }}" class="img-fluid my-3" alt="Post image">
+            {% endif %}
+        {% endfor %}
+
+        <!-- Social Buttons -->
+        <div class="d-flex align-items-center gap-3 my-3">
+            <!-- AJAX-Enabled Like Button -->
+            <button type="button"
+                    class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
+                    data-post-id="{{ post.id }}">
+                {% if request.user in post.likes.all %}
+                    <span class="heart liked">❤</span>
+                {% else %}
+                    <span class="heart">♡</span>
+                {% endif %}
+                <span class="like-count">({{ post.likes.count }})</span>
+            </button>
+            <!-- Comment Button -->
+            <a href="{% url 'view_all_comments' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
+            <button class="btn btn-sm btn-outline-secondary">Share</button>
+        </div>
+
+        <!-- Comments Section -->
+        <div class="mt-4">
+            <h5>Comments</h5>
+            {% for comment in post.comments.all|dictsortreversed:"created_at"|slice:":5" %}
+                <p><strong>{{ comment.user.username }}</strong>: {{ comment.content }}</p>
+            {% endfor %}
+            <a href="{% url 'view_all_comments' post.id %}" class="btn btn-link">View All Comments</a>
+            <form method="POST" action="{% url 'add_comment' post.id %}">
+                {% csrf_token %}
+                <textarea class="form-control mt-2" name="content" placeholder="Add a comment..."></textarea>
+                <button type="submit" class="btn btn-sm btn-primary mt-2">Comment</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

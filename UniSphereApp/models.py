@@ -6,10 +6,10 @@ import os
 # User Model
 class User(AbstractUser):
     STUDENT = 'student'
-    RECRUITER = 'recruiter'
+    SOCIETY = 'society'
     ROLE_CHOICES = [
         (STUDENT, 'Student'),
-        (RECRUITER, 'Recruiter'),
+        (SOCIETY, 'Society'),
     ]
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default=STUDENT)
 
@@ -27,7 +27,7 @@ class Project(models.Model):
         return f"{self.user.username} - {self.title}"
 
 class StudentPost(models.Model):
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="posts")
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, null=True, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=255)
     caption = models.TextField()
@@ -46,17 +46,8 @@ class PostFile(models.Model):
             storage.delete(self.file.name)  
         super().delete(*args, **kwargs)
 
-# Recruiter & Student Profiles
-class RecruiterProfile(models.Model):
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    company_name = models.CharField(max_length=255)
-    industry = models.CharField(max_length=100)
-    company_description = models.TextField(blank=True, null=True)
-    location = models.CharField(max_length=255, null=True, blank=True)
-    company_website = models.URLField(blank=True, null=True)
+# Society & Student Profiles
 
-    def __str__(self):
-        return self.company_name
 
 def profile_picture_upload_path(instance, filename):
     return f"profile_pictures/{instance.user.username}/{filename}"
@@ -71,7 +62,9 @@ class StudentProfile(models.Model):
     profile_picture = models.ImageField(upload_to="profile_pictures/", blank=True, null=True)
     full_name = models.CharField(max_length=100, blank=True, null=True)  
     gender = models.CharField(max_length=10, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True, null=True)
-    school = models.CharField(max_length=255, blank=True, null=True)  
+    school = models.CharField(max_length=255, blank=True, null=True)
+    skills = models.TextField(blank=True, null=True)
+    course = models.CharField(max_length=100, blank=True, null=True)
     bio = models.TextField(blank=True, null=True)  
     interests = models.TextField(blank=True, null=True)  
     languages = models.CharField(max_length=255, blank=True, null=True)  
@@ -143,3 +136,21 @@ class SharedPost(models.Model):
 
     def __str__(self):
         return f"{self.user.username} shared {self.original_post.title}"
+
+
+class SocietyProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    society_name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    website = models.URLField(blank=True, null=True)
+    logo = models.ImageField(upload_to="society_logos/", blank=True, null=True)
+    
+    # Your new society-specific fields
+    
+    category = models.CharField(max_length=100, blank=True, null=True)
+    social_links = models.URLField(blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
+    
+
+    def __str__(self):
+        return self.society_name or self.user.username
