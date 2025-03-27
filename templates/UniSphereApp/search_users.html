@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Search Users - UniSphere{% endblock %}
 
@@ -51,11 +52,10 @@
                 <td>{{ student.course|default:"N/A" }}</td>
                 <td>{{ student.skills|default:"N/A" }}</td>
                 <td class="d-flex flex-wrap gap-1">
-                    {% if student in request.user.societyprofile.saved_students.all %}
-                        <button class="btn btn-secondary btn-sm" disabled>Saved</button>
-                    {% else %}
-                        <button class="btn btn-outline-success btn-sm btn-save" data-student-id="{{ student.id }}">Save</button>
-                    {% endif %}
+                    <!-- AJAX Send Friend Request Button -->
+                    <button class="btn btn-outline-success btn-sm btn-send-request" data-student-id="{{ student.id }}">
+                        Send Friend Request
+                    </button>
                     <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-info btn-sm">View Profile</a>
                     <a href="{% url 'contact_profile' student.id %}" class="btn btn-outline-primary btn-sm">Contact</a>
                 </td>
@@ -99,16 +99,19 @@
     {% endif %}
 </div>
 
+<!-- Toast Container -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100"></div>
 
 <script>
 function showToast(message, type = 'info') {
     const toastId = 'toast-' + Date.now();
     const toastHtml = `
-        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0 mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0 mb-2"
+             role="alert" aria-live="assertive" aria-atomic="true">
             <div class="d-flex">
                 <div class="toast-body">${message}</div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
             </div>
         </div>
     `;
@@ -117,28 +120,60 @@ function showToast(message, type = 'info') {
     const toastElement = document.getElementById(toastId);
     const toast = new bootstrap.Toast(toastElement);
     toast.show();
-
     toastElement.addEventListener('hidden.bs.toast', () => {
         toastElement.remove();
     });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll(".btn-save").forEach(button => {
-        button.addEventListener("click", function () {
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            cookie = cookie.trim();
+            if (cookie.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".btn-send-request").forEach(button => {
+        button.addEventListener("click", function() {
             const studentId = this.getAttribute("data-student-id");
-            fetch(`/society/save/${studentId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    showToast(data.message, 'success');
-                    this.disabled = true;
-                    this.innerText = "Saved";
-                    this.classList.remove("btn-outline-success");
-                    this.classList.add("btn-secondary");
-                });
+            const csrftoken = getCookie('csrftoken');
+
+            fetch(`/friend-request/send/${studentId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: studentId })
+            })
+            .then(response => {
+                if(!response.ok){
+                    throw new Error("Network response was not ok");
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+                showToast(data.message, 'success');
+                this.disabled = true;
+                this.innerText = "Request Sent";
+                this.classList.remove("btn-outline-success");
+                this.classList.add("btn-secondary");
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('An error occurred', 'danger');
+            });
         });
     });
 });
 </script>
-
 {% endblock %}

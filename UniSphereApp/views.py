@@ -17,7 +17,8 @@ def home(request):
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
 def welcomepage(request):
-    return render(request, 'UniSphereApp/welcomepage.html')
+    recent_posts = StudentPost.objects.filter(project__isnull=True).order_by('-timestamp')[:2]
+    return render(request, 'UniSphereApp/welcomepage.html', {'recent_posts': recent_posts})
 
 def about(request):
     return render(request, 'UniSphereApp/about.html')
@@ -97,16 +98,29 @@ def create_profile(request):
 
         return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
+
 @login_required
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    is_owner = request.user == profile_user
+    is_owner = (request.user == profile_user)
+    is_friend = False
+    friend_request_sent = False
 
     if profile_user.role == 'student':
         profile, created = StudentProfile.objects.get_or_create(user=profile_user)
         projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
         recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
-
+        if not is_owner and request.user.role == 'student' and profile_user.role == 'student':
+            if profile in request.user.studentprofile.friends.all():
+                is_friend = True
+            else:
+                from .models import FriendRequest
+                if FriendRequest.objects.filter(
+                        from_user=request.user,
+                        to_user=profile_user,
+                        status='PENDING'
+                    ).exists():
+                    friend_request_sent = True
         if profile.visibility == "private" and not is_owner:
             return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
@@ -116,6 +130,8 @@ def profile(request, username):
             "profile_user": profile_user,
             "is_owner": is_owner,
             "recent_posts": recent_posts,
+            "is_friend": is_friend,
+            "friend_request_sent": friend_request_sent,
         })
 
     elif profile_user.role == 'society':
@@ -129,7 +145,7 @@ def profile(request, username):
         if request.user.is_authenticated and request.user.role == 'student':
             student_profile = StudentProfile.objects.filter(user=request.user).first()
             is_member = profile.members.filter(id=student_profile.id).exists()
-        
+
             if request.method == 'POST':
                 action = request.POST.get('action')
                 if action == 'join' and not is_member:
@@ -140,13 +156,22 @@ def profile(request, username):
                     is_member = False
 
         return render(request, "UniSphereApp/society_profile.html", {
-        "profile": profile,
-        "profile_user": profile_user,
-        "is_owner": is_owner,
-        "projects": projects,
-        "recent_posts": recent_posts,
-        "is_member": is_member,
-    })
+            "profile": profile,
+            "profile_user": profile_user,
+            "is_owner": is_owner,
+            "projects": projects,
+            "recent_posts": recent_posts,
+            "is_member": is_member,
+        })
+
+@login_required
+def remove_friend(request, user_id):
+    if request.method == 'POST':
+        target_user = get_object_or_404(User, id=user_id)
+        request.user.studentprofile.friends.remove(target_user.studentprofile)
+        target_user.studentprofile.friends.remove(request.user.studentprofile)
+        return JsonResponse({"message": f"Removed friend {target_user.username}."})
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 @login_required
 def my_profile(request):
@@ -319,7 +344,7 @@ def view_post(request, post_id):
     # Render a template that shows the full post details.
     return render(request, 'UniSphereApp/view_post.html', {'post': post})
 
-@login_required
+
 def search_users(request):
     students = []
     societies = []
@@ -361,6 +386,8 @@ def search_users(request):
 
         # Filter societies ONLY IF society-related fields are filled
         society_filters = Q()
+        if username:
+            society_filters &= Q(user__username=username)
         if society_name:
             society_filters &= Q(society_name=society_name)
         if category:
@@ -370,7 +397,7 @@ def search_users(request):
         if contact_email:
             society_filters &= Q(contact_email=contact_email)
 
-        if any([society_name, category, description, contact_email]):
+        if any([username, society_name, category, description, contact_email]):
             societies = SocietyProfile.objects.filter(society_filters)
 
     return render(request, "UniSphereApp/search_users.html", {
@@ -437,14 +464,21 @@ def view_all_comments(request, post_id):
     comments = post.comments.all().order_by('-created_at')
     return render(request, 'UniSphereApp/all_comments.html', {'post': post, 'comments': comments})
 
+
 @login_required
 def send_friend_request(request, user_id):
-    to_user = get_object_or_404(User, id=user_id)
-    if request.user != to_user:
-        friend_request, created = FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user, status=FriendRequest.PENDING)
-        if not created:
-            return JsonResponse({"message": "Friend request already sent."})
-    return JsonResponse({"message": "Friend request sent"})
+    if request.method == 'POST':
+        to_user = get_object_or_404(User, id=user_id)
+        if to_user == request.user:
+            return JsonResponse({"error": "Cannot send friend request to yourself."}, status=400)
+        from .models import FriendRequest
+        friend_request, created = FriendRequest.objects.update_or_create(
+            from_user=request.user,
+            to_user=to_user,
+            defaults={'status': FriendRequest.PENDING}
+        )
+        return JsonResponse({"message": "Friend request sent."})
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 @login_required
 def accept_friend_request(request, request_id):
