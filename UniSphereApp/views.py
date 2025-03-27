@@ -64,7 +64,18 @@ def custom_login(request):
 def profile_posts(request, username):
     user = get_object_or_404(User, username=username)
     posts = StudentPost.objects.filter(user=user).order_by('-timestamp')
-    return render(request, 'UniSphereApp/profile_posts.html', {'profile': user.studentprofile, 'posts': posts})
+
+    if user.role == 'student':
+        profile = get_object_or_404(StudentProfile, user=user)
+    elif user.role == 'society':
+        profile = get_object_or_404(SocietyProfile, user=user)
+    else:
+        profile = None
+
+    return render(request, 'UniSphereApp/profile_posts.html', {
+        'profile': profile,
+        'posts': posts
+    })
 
 @login_required
 def create_profile(request):
