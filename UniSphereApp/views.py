@@ -355,13 +355,13 @@ def accept_friend_request(request, request_id):
     friend_request.from_user.studentprofile.friends.add(friend_request.to_user.studentprofile)
     friend_request.to_user.studentprofile.friends.add(friend_request.from_user.studentprofile)
 
-    return redirect('profile', username=request.user.username)
+    return redirect('friend_requests')
 
 @login_required
 def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
-    return redirect('profile', username=request.user.username)
+    return redirect('friend_requests', username=request.user.username)
 
 @login_required
 def friend_requests(request):

@@ -10,7 +10,7 @@
         <ul class="list-group">
             {% for request in requests %}
                 <li class="list-group-item d-flex justify-content-between align-items-center">
-                    <strong>{{ request.from_user.username }}</strong> 
+                    <strong>{{ request.from_user.username }}</strong>
                     <div>
                         <form action="{% url 'accept_friend_request' request.id %}" method="POST" class="d-inline">
                             {% csrf_token %}
@@ -26,6 +26,57 @@
         </ul>
     {% else %}
         <p>No pending friend requests.</p>
+    {% endif %}
+
+    <hr>
+
+    <h2>Your Friends</h2>
+    {% if user.studentprofile.friends.all %}
+        <ul>
+            {% for friend in user.studentprofile.friends.all %}
+                <li>
+                    <a href="{% url 'profile' friend.user.username %}">
+                        {{ friend.user.username }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="text-muted">No friends yet.</p>
+    {% endif %}
+
+    <hr>
+
+    {% if profile_user %}
+    <div class="card p-4 mt-3">
+        {% if is_owner %}
+            <p class="text-info">This is your own profile. No friend actions needed.</p>
+        {% else %}
+            {% if is_friend %}
+                <p class="text-success">You are friends with {{ profile_user.username }}</p>
+            {% elif friend_request_sent %}
+                <p class="text-warning">Friend request sent. Awaiting approval.</p>
+                <form action="{% url 'decline_friend_request' profile_user.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Cancel Request</button>
+                </form>
+            {% elif friend_request_received %}
+                <form action="{% url 'accept_friend_request' profile_user.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-success">Accept Friend Request</button>
+                </form>
+                <form action="{% url 'decline_friend_request' profile_user.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Decline</button>
+                </form>
+            {% else %}
+                <form action="{% url 'send_friend_request' profile_user.id %}" method="POST">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-primary">Send Friend Request</button>
+                </form>
+            {% endif %}
+        {% endif %}
+    </div>
     {% endif %}
 </div>
 {% endblock %}
