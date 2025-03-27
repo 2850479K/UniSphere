@@ -584,13 +584,9 @@ def society_members(request, society_username):
             elif action == 'leave' and is_member:
                 society.members.remove(student_profile)
                 is_member = False
-
-    return render(request, 'UniSphereApp/society_members.html', {
-        'society': society,
-        'members': society.members.all(),
-        'is_member': is_member,
-        'student_profile': student_profile,
-    })
+                
+        return redirect('profile', username=society_user.username)
+    
 
 @login_required
 def joined_societies(request, username):
