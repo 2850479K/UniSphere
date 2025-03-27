@@ -11,10 +11,13 @@ from django.views.decorators.http import require_POST
 User = get_user_model()
 
 def home(request):
+    if not request.user.is_authenticated:
+        return redirect('welcomepage')
     posts = StudentPost.objects.filter(
         Q(project__isnull=True) | Q(project__isnull=False, user__studentprofile__visibility='public')
     ).order_by('-timestamp')
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
+
 
 def welcomepage(request):
     recent_posts = StudentPost.objects.filter(project__isnull=True).order_by('-timestamp')[:2]

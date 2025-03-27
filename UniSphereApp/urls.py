@@ -5,7 +5,7 @@ from . import views
 from .views import welcomepage
 
 urlpatterns = [
-    path('', views.home, name='home'),
+    path('home/', views.home, name='home'),
     path('register/', views.register, name='register'),
     path('create-profile/', views.create_profile, name='create_profile'),
     path('edit-profile/', views.edit_profile, name='edit_profile'),

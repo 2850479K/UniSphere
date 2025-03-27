@@ -9,9 +9,11 @@
     <div class="row">
         <div class="col-md-6">
     <h2>Welcome To UniSphere</h2>
-    <div class="d-flex justify-content-left gap-4 mt-5">
-        <button class="btn btn-primary">Sign in with password</button>
-        <button class="btn btn-primary">Register with student ID</button>
+    <div class="d-flex justify-content-left gap-5 mt-5">
+                <!-- Link to login -->
+        <a href="{% url 'login' %}" class="btn btn-primary">Sign in with password</a>
+                <!-- Link to register -->
+        <a href="{% url 'register' %}" class="btn btn-primary">Register with Email</a>
     </div>
 
     <div class="mt-4 text-start mx-left policy-style mt-5" style="max-width: 480px;">
