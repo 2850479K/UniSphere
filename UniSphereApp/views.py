@@ -101,10 +101,10 @@ def create_profile(request):
         return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 
-@login_required
+
 def profile(request, username):
     profile_user = get_object_or_404(User, username=username)
-    is_owner = (request.user == profile_user)
+    is_owner = request.user.is_authenticated and request.user == profile_user
     is_friend = False
     friend_request_sent = False
 
@@ -113,17 +113,21 @@ def profile(request, username):
         projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
         recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
         user_friends = profile.friends.all()
-        if not is_owner and request.user.role == 'student' and profile_user.role == 'student':
-            if profile in request.user.studentprofile.friends.all():
-                is_friend = True
-            else:
-                from .models import FriendRequest
-                if FriendRequest.objects.filter(
-                        from_user=request.user,
-                        to_user=profile_user,
-                        status='PENDING'
-                    ).exists():
+
+        if request.user.is_authenticated and not is_owner and request.user.role == 'student':
+            try:
+                current_student_profile = StudentProfile.objects.get(user=request.user)
+                if profile in current_student_profile.friends.all():
+                    is_friend = True
+                elif FriendRequest.objects.filter(
+                    from_user=request.user,
+                    to_user=profile_user,
+                    status='pending'  # match the default lowercase value in your model
+                ).exists():
                     friend_request_sent = True
+            except StudentProfile.DoesNotExist:
+                pass  # in case their profile isn't created yet
+
         if profile.visibility == "private" and not is_owner:
             return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
 
@@ -148,16 +152,17 @@ def profile(request, username):
 
         if request.user.is_authenticated and request.user.role == 'student':
             student_profile = StudentProfile.objects.filter(user=request.user).first()
-            is_member = profile.members.filter(id=student_profile.id).exists()
+            if student_profile:
+                is_member = profile.members.filter(id=student_profile.id).exists()
 
-            if request.method == 'POST':
-                action = request.POST.get('action')
-                if action == 'join' and not is_member:
-                    profile.members.add(student_profile)
-                    is_member = True
-                elif action == 'leave' and is_member:
-                    profile.members.remove(student_profile)
-                    is_member = False
+                if request.method == 'POST':
+                    action = request.POST.get('action')
+                    if action == 'join' and not is_member:
+                        profile.members.add(student_profile)
+                        is_member = True
+                    elif action == 'leave' and is_member:
+                        profile.members.remove(student_profile)
+                        is_member = False
 
         return render(request, "UniSphereApp/society_profile.html", {
             "profile": profile,
