@@ -121,7 +121,7 @@ class SocietyProfile(models.Model):
     society_name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
     website = models.URLField(blank=True, null=True)
-    logo = models.ImageField(upload_to="society_logos/", blank=True, null=True)
+    members = models.ManyToManyField(StudentProfile, blank=True, related_name='joined_societies')
     
     # Your new society-specific fields
     

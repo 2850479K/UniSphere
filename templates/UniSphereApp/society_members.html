@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ society.society_name }} Members{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ society.society_name }} Members</h2>
+
+    {% if user.role == 'student' %}
+    <form method="POST">
+        {% csrf_token %}
+        <button class="btn btn-success mb-3" type="submit">Join Society</button>
+    </form>
+    {% endif %}
+
+    {% if members %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Profile Picture</th>
+                <th>Name</th>
+                <th>School</th>
+                <th>Skills</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for member in members %}
+            <tr>
+                <td><img src="{{ member.get_profile_picture_url }}" alt="Profile" width="60"></td>
+                <td>{{ member.full_name|default:member.user.username }}</td>
+                <td>{{ member.school|default:"N/A" }}</td>
+                <td>{{ member.skills|default:"N/A" }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+        <p>No members yet.</p>
+    {% endif %}
+</div>
+{% endblock %}

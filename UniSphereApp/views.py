@@ -107,16 +107,33 @@ def profile(request, username):
 
     elif profile_user.role == 'society':
         profile, created = SocietyProfile.objects.get_or_create(user=profile_user)
-        projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]  # Get projects for society
+        projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
         recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
 
+        is_member = False
+        student_profile = None
+
+        if request.user.is_authenticated and request.user.role == 'student':
+            student_profile = StudentProfile.objects.filter(user=request.user).first()
+            is_member = profile.members.filter(id=student_profile.id).exists()
+        
+            if request.method == 'POST':
+                action = request.POST.get('action')
+                if action == 'join' and not is_member:
+                    profile.members.add(student_profile)
+                    is_member = True
+                elif action == 'leave' and is_member:
+                    profile.members.remove(student_profile)
+                    is_member = False
+
         return render(request, "UniSphereApp/society_profile.html", {
-            "profile": profile,
-            "profile_user": profile_user,
-            "is_owner": is_owner,
-            "projects": projects,
-            "recent_posts": recent_posts,
-        })
+        "profile": profile,
+        "profile_user": profile_user,
+        "is_owner": is_owner,
+        "projects": projects,
+        "recent_posts": recent_posts,
+        "is_member": is_member,
+    })
 
 @login_required
 def my_profile(request):
@@ -482,3 +499,31 @@ def contact_profile(request, user_id):
         email = profile.contact_email  # Societies might have a separate contact email
     
     return render(request, 'UniSphereApp/contact_email.html', {'email': email})
+
+@login_required
+def society_members(request, society_username):
+    society_user = get_object_or_404(User, username=society_username, role='society')
+    society = get_object_or_404(SocietyProfile, user=society_user)
+
+    is_member = False
+    student_profile = None
+
+    if request.user.role == 'student':
+        student_profile = get_object_or_404(StudentProfile, user=request.user)
+        is_member = society.members.filter(id=student_profile.id).exists()
+
+        if request.method == 'POST':
+            action = request.POST.get('action')
+            if action == 'join' and not is_member:
+                society.members.add(student_profile)
+                is_member = True
+            elif action == 'leave' and is_member:
+                society.members.remove(student_profile)
+                is_member = False
+
+    return render(request, 'UniSphereApp/society_members.html', {
+        'society': society,
+        'members': society.members.all(),
+        'is_member': is_member,
+        'student_profile': student_profile,
+    })

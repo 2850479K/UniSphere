@@ -14,8 +14,19 @@
                 <img src="{% if profile.logo %}{{ profile.logo.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}" class="rounded-circle mb-3"
                      style="width: 120px; height: 120px; object-fit: cover;" alt="Profile Picture">
                 {% if is_owner %}
-                    <a href="{% url 'edit_society_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
+                    <a href="{% url 'edit_society_profile' %}" class="btn btn-primary">Edit Profile</a>
+<a href="{% url 'society_members' profile_user.username %}" class="btn btn-outline-primary">View Members</a>
                 {% endif %}
+                {% if user.is_authenticated and user.role == 'student' %}
+<form method="post" style="display: inline;">
+    {% csrf_token %}
+    {% if is_member %}
+        <button type="submit" name="action" value="leave" class="btn btn-outline-danger">Leave Society</button>
+    {% else %}
+        <button type="submit" name="action" value="join" class="btn btn-success">Join Society</button>
+    {% endif %}
+</form>
+{% endif %}
             </div>
 
             {% if profile.description %}
