@@ -18,7 +18,6 @@ def home(request):
     ).order_by('-timestamp')
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
-
 def welcomepage(request):
     recent_posts = StudentPost.objects.filter(project__isnull=True).order_by('-timestamp')[:2]
     return render(request, 'UniSphereApp/welcomepage.html', {'recent_posts': recent_posts})
@@ -113,6 +112,7 @@ def profile(request, username):
         profile, created = StudentProfile.objects.get_or_create(user=profile_user)
         projects = Project.objects.filter(user=profile_user).order_by("-timestamp")[:5]
         recent_posts = StudentPost.objects.filter(user=profile_user).order_by("-timestamp")[:6]
+        user_friends = profile.friends.all()
         if not is_owner and request.user.role == 'student' and profile_user.role == 'student':
             if profile in request.user.studentprofile.friends.all():
                 is_friend = True
@@ -135,6 +135,7 @@ def profile(request, username):
             "recent_posts": recent_posts,
             "is_friend": is_friend,
             "friend_request_sent": friend_request_sent,
+            "user_friends": user_friends,
         })
 
     elif profile_user.role == 'society':
