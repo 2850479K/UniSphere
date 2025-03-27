@@ -45,16 +45,20 @@ class ProjectForm(forms.ModelForm):
         fields = ['title', 'description']
 
 class StudentPostForm(forms.ModelForm):
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.none(),
+        required=False,
+        label="Select Project (optional)",
+        empty_label="Post to profile (no project)"
+    )
     files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}), required=False
+        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        required=False
     )
 
     class Meta:
         model = StudentPost
-        fields = ['title', 'caption']
-        required = {
-            'files': False
-        }
+        fields = ['title', 'caption', 'project']
 
 class CommentForm(forms.ModelForm):
     class Meta:

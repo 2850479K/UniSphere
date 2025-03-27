@@ -13,7 +13,7 @@
     {% endif %}
 
     {% for post in posts %}
-    <div class="post-card mb-4 ">
+    <div class="post-card mb-4">
         <!-- Post Header -->
         <div class="post-header d-flex align-items-center mb-2">
             <div class="profile-pic-wrapper">
@@ -63,9 +63,15 @@
                     {% endif %}
                     <span class="like-count">({{ post.likes.count }})</span>
                 </button>
-                <!-- Comment button navigates to full post view -->
+
+                <!-- Comment Button -->
                 <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
-                <button class="btn btn-sm btn-outline-secondary">Share</button>
+
+                <!-- Repost Button -->
+                <form method="POST" action="{% url 'share_post' post.id %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-sm btn-outline-secondary">Repost</button>
+                </form>
             </div>
         </div>
     </div>

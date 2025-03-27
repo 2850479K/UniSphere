@@ -289,34 +289,34 @@ def delete_project(request, project_id):
 # Posts
 @login_required
 def create_post(request, project_id=None):
-    """
-    Create a new post.
-    If project_id is provided, the post is created under that project.
-    If not, the post is created as a profile post (project is set to None).
-    """
-    project = get_object_or_404(Project, id=project_id) if project_id else None
+    project_instance = None
+    if project_id:
+        project_instance = get_object_or_404(Project, id=project_id, user=request.user)
 
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES)
+        form.fields['project'].queryset = Project.objects.filter(user=request.user)
+
         files = request.FILES.getlist('files')
         if form.is_valid():
             post = form.save(commit=False)
             post.user = request.user
-            post.project = project  
+            post.project = project_instance or form.cleaned_data.get('project')  # use URL one if passed
             post.save()
             for file in files:
                 PostFile.objects.create(post=post, file=file)
             messages.success(request, "Post added successfully!")
-            if project:
-                return redirect('project', project_id=project.id)
+            if post.project:
+                return redirect('project', project_id=post.project.id)
             else:
                 return redirect('profile', username=request.user.username)
-        else:
-            messages.error(request, "Error adding post. Please check the form.")
     else:
         form = StudentPostForm()
+        form.fields['project'].queryset = Project.objects.filter(user=request.user)
+        if project_instance:
+            form.fields['project'].initial = project_instance
 
-    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project})
+    return render(request, 'UniSphereApp/create_post.html', {'form': form, 'project': project_instance})
 
 @login_required
 def edit_post(request, post_id):
@@ -324,7 +324,10 @@ def edit_post(request, post_id):
 
     if request.user != post.user:
         messages.error(request, "You are not authorized to edit this post.")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=post.user.username)
 
     if request.method == 'POST':
         form = StudentPostForm(request.POST, request.FILES, instance=post)
@@ -340,10 +343,12 @@ def edit_post(request, post_id):
                 PostFile.objects.create(post=post, file=file)
 
             messages.success(request, "Post updated successfully!")
-            return redirect('project', project_id=post.project.id)
+            if post.project:
+                return redirect('project', project_id=post.project.id)
+            else:
+                return redirect('profile', username=post.user.username)
         else:
             messages.error(request, "Error updating post. Please check the form.")
-
     else:
         form = StudentPostForm(instance=post)
         existing_files = PostFile.objects.filter(post=post)
@@ -356,14 +361,23 @@ def delete_post(request, post_id):
 
     if post.user != request.user:
         messages.error(request, "You are not authorized to delete this post.")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=post.user.username)
 
     if request.method == "POST":
         post.delete()
         messages.success(request, "Post deleted successfully!")
-        return redirect('project', project_id=post.project.id)
+        if post.project:
+            return redirect('project', project_id=post.project.id)
+        else:
+            return redirect('profile', username=request.user.username)
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=request.user.username)
 
 def view_post(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
@@ -464,7 +478,10 @@ def like_post(request, post_id):
             "likes_count": post.likes.count()
         })
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=post.user.username)
 
 @login_required
 def add_comment(request, post_id):
@@ -475,9 +492,12 @@ def add_comment(request, post_id):
         if content:
             Comment.objects.create(user=request.user, post=post, content=content)
 
-    return redirect('project', project_id=post.project.id)
+    if post.project:
+        return redirect('project', project_id=post.project.id)
+    else:
+        return redirect('profile', username=post.user.username)
 
-@login_required
+
 def view_all_comments(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
     comments = post.comments.all().order_by('-created_at')
@@ -623,7 +643,7 @@ def society_members(request, society_username):
     })
     
 
-@login_required
+
 def joined_societies(request, username):
     student_user = get_object_or_404(User, username=username, role='student')
     student_profile = get_object_or_404(StudentProfile, user=student_user)
