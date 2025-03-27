@@ -295,38 +295,58 @@ def view_post(request, post_id):
 
 @login_required
 def search_users(request):
-    show_results = False
     students = []
     societies = []
+    show_results = False
 
-    # Retrieving form inputs for filtering
-    username = request.GET.get("username", "")
-    name = request.GET.get("name", "")
-    school = request.GET.get("school", "")
-    course = request.GET.get("course", "")
-    interests = request.GET.get("interests", "")
-    skills = request.GET.get("skills", "")
-    society_name = request.GET.get("society_name", "")
-    category = request.GET.get("category", "")
-    description = request.GET.get("description", "")
-    contact_email = request.GET.get("contact_email", "")
+    # Get form input values
+    username = request.GET.get("username", "").strip()
+    name = request.GET.get("name", "").strip()
+    school = request.GET.get("school", "").strip()
+    course = request.GET.get("course", "").strip()
+    interests = request.GET.get("interests", "").strip()
+    skills = request.GET.get("skills", "").strip()
+    society_name = request.GET.get("society_name", "").strip()
+    category = request.GET.get("category", "").strip()
+    description = request.GET.get("description", "").strip()
+    contact_email = request.GET.get("contact_email", "").strip()
 
-    # Search for students
-    student_filters = Q(user__username__icontains=username) | Q(full_name__icontains=name) | \
-                  Q(school__icontains=school) | Q(course__icontains=course) | \
-                  Q(interests__icontains=interests) | Q(skills__icontains=skills)  # Add skills filter
-    students = StudentProfile.objects.filter(student_filters)
-
-    # Search for societies
-    society_filters = Q(society_name__icontains=society_name) | Q(category__icontains=category) | \
-                      Q(description__icontains=description) | Q(contact_email__icontains=contact_email)
-    societies = SocietyProfile.objects.filter(society_filters)
-
-    # Show results if any students or societies are found
-    if students or societies:
+    # True if any field is filled
+    if any([username, name, school, course, interests, skills, society_name, category, description, contact_email]):
         show_results = True
 
-    # Return the results
+        # Filter students
+        student_filters = Q()
+        if username:
+            student_filters &= Q(user__username__icontains=username)
+        if name:
+            student_filters &= Q(full_name__icontains=name)
+        if school:
+            student_filters &= Q(school__icontains=school)
+        if course:
+            student_filters &= Q(course__icontains=course)
+        if interests:
+            student_filters &= Q(interests__icontains=interests)
+        if skills:
+            student_filters &= Q(skills__icontains=skills)
+
+        if student_filters:  # Only query if there's something to filter
+            students = StudentProfile.objects.filter(student_filters)
+
+        # Filter societies ONLY IF society-related fields are filled
+        society_filters = Q()
+        if society_name:
+            society_filters &= Q(society_name__icontains=society_name)
+        if category:
+            society_filters &= Q(category__icontains=category)
+        if description:
+            society_filters &= Q(description__icontains=description)
+        if contact_email:
+            society_filters &= Q(contact_email__icontains=contact_email)
+
+        if any([society_name, category, description, contact_email]):
+            societies = SocietyProfile.objects.filter(society_filters)
+
     return render(request, "UniSphereApp/search_users.html", {
         "show_results": show_results,
         "students": students,
