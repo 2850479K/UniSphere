@@ -527,3 +527,14 @@ def society_members(request, society_username):
         'is_member': is_member,
         'student_profile': student_profile,
     })
+
+@login_required
+def joined_societies(request, username):
+    student_user = get_object_or_404(User, username=username, role='student')
+    student_profile = get_object_or_404(StudentProfile, user=student_user)
+    societies = student_profile.joined_societies.all()
+
+    return render(request, 'UniSphereApp/joined_societies.html', {
+        'student_profile': student_profile,
+        'societies': societies,
+    })

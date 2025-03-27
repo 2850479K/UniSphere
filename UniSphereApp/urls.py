@@ -33,6 +33,7 @@ urlpatterns = [
     #Society    
     path('edit-society-profile/', views.edit_society_profile, name='edit_society_profile'),
     path('society/<str:society_username>/members/', views.society_members, name='society_members'),
+    path('student/<str:username>/joined-societies/', views.joined_societies, name='joined_societies'),
 
     #Search
     path('search-users/', views.search_users, name='search_users'),

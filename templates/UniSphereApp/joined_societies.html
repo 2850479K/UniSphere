@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block title %}Joined Societies - {{ student_profile.full_name|default:student_profile.user.username }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">
+        Societies Joined 
+        <span class="badge bg-secondary">{{ societies|length }}</span>
+    </h2>
+
+    {% if societies %}
+    <div class="row">
+        {% for society in societies %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body text-center">
+                    <img src="{% static 'images/default_pfp.jpeg' %}" class="rounded-circle mb-3" width="80" height="80" alt="Society">
+                    <h5 class="card-title mb-1">{{ society.society_name }}</h5>
+                    <p class="card-text text-muted mb-1">
+                        <i class="bi bi-grid-fill me-1"></i><strong>Category:</strong> {{ society.category|default:"N/A" }}
+                    </p>
+                    <p class="card-text text-muted">
+                        <i class="bi bi-envelope me-1"></i><strong>Email:</strong> {{ society.contact_email|default:"N/A" }}
+                    </p>
+                    <a href="{% url 'profile' society.user.username %}" class="btn btn-outline-primary btn-sm mt-2">
+                        <i class="bi bi-building"></i> View Profile
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p>This student hasn’t joined any societies yet.</p>
+    {% endif %}
+</div>
+{% endblock %}
