@@ -14,12 +14,13 @@ def home(request):
     if not request.user.is_authenticated:
         return redirect('welcomepage')
     posts = StudentPost.objects.filter(
-        Q(project__isnull=True) | Q(project__isnull=False, user__studentprofile__visibility='public')
+        Q(user__role='society') |
+        Q(user__role='student', user__studentprofile__visibility='public')
     ).order_by('-timestamp')
     return render(request, 'UniSphereApp/home.html', {'posts': posts})
 
 def welcomepage(request):
-    recent_posts = StudentPost.objects.filter(project__isnull=True).order_by('-timestamp')[:2]
+    recent_posts = StudentPost.objects.all().order_by('-timestamp')[:2]
     return render(request, 'UniSphereApp/welcomepage.html', {'recent_posts': recent_posts})
 
 def about(request):
@@ -97,7 +98,6 @@ def create_profile(request):
             form = SocietyCreateProfileForm(instance=profile)
 
         return render(request, 'UniSphereApp/create_profile.html', {'form': form})
-
 
 
 def profile(request, username):
@@ -184,9 +184,9 @@ def remove_friend(request, user_id):
         except Exception as e:
             messages.error(request, "Something went wrong while removing the friend.")
 
-        return redirect('friend_requests') 
+        return redirect('friend_requests', username=request.user.username)
 
-    return redirect('friend_requests')
+    return redirect('friend_requests', username=request.user.username)
 
 @login_required
 def my_profile(request):
@@ -494,24 +494,30 @@ def accept_friend_request(request, request_id):
     friend_request.from_user.studentprofile.friends.add(friend_request.to_user.studentprofile)
     friend_request.to_user.studentprofile.friends.add(friend_request.from_user.studentprofile)
 
-    return redirect('friend_requests')
+    return redirect('friend_requests', username=request.user.username)
 
 @login_required
 def decline_friend_request(request, request_id):
     friend_request = get_object_or_404(FriendRequest, id=request_id, to_user=request.user)
     friend_request.delete()
-    return redirect('friend_requests', username=request.user.username)
+    return redirect('friend_requests')
 
-@login_required
-def friend_requests(request):
-    requests = FriendRequest.objects.filter(to_user=request.user, status=FriendRequest.PENDING)
-    student_profile = get_object_or_404(StudentProfile, user=request.user)
-    is_owner = True 
 
+def student_friends_and_requests(request, username):
+    profile_user = get_object_or_404(User, username=username, role='student')
+    student_profile = get_object_or_404(StudentProfile, user=profile_user)
+    is_owner = request.user == profile_user
+
+    user_friends = student_profile.friends.all()
+
+    requests = []
+    if is_owner:
+        requests = FriendRequest.objects.filter(to_user=request.user, status=FriendRequest.PENDING)
     return render(request, 'UniSphereApp/friend_requests.html', {
-        'requests': requests,
-        'is_owner': is_owner,
         'student_profile': student_profile,
+        'user_friends': user_friends,
+        'is_owner': is_owner,
+        'requests': requests,
     })
 
 @login_required
