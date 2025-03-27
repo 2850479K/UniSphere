@@ -52,7 +52,7 @@ class StudentPostForm(forms.ModelForm):
         empty_label="Post to profile (no project)"
     )
     files = forms.FileField(
-        widget=forms.ClearableFileInput(attrs={'multiple': True}),
+        widget=forms.ClearableFileInput(attrs={'multiple': False}),
         required=False
     )
 

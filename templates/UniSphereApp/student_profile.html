@@ -30,7 +30,7 @@
     {% endif %}
 {% endif %}
                 {% endif %}
-                <a href="{% url 'friend_requests' %}" class="btn btn-warning mb-3">Friend List</a>
+                <a href="{% url 'friend_requests' profile_user.username %}" class="btn btn-warning mb-3">Friend List</a>
                 <a href="{% url 'joined_societies' profile_user.username %}" class="btn btn-outline-primary mb-3">
                     View Societies
                 </a>
