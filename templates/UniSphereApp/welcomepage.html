@@ -30,28 +30,45 @@
 </div>
 
         <div class="col-md-6">
-            <h4 class="mb-4">Latest Posts</h4>
-            {% for post in recent_posts %}
-            <div class="card mb-3 shadow-sm">
-                {% if post.files.all %}
-                    {% for file in post.files.all|slice:":1" %}
-                        {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
-                            <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
-                        {% endif %}
-                    {% endfor %}
+    <h4 class="mb-4">Latest Posts</h4>
+    {% for post in recent_posts %}
+    <div class="card mb-4 post-card">
+        {% if post.files.all %}
+            {% for file in post.files.all|slice:":1" %}
+                {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
+                    <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
                 {% endif %}
-                <div class="card-body">
-                    <h6 class="card-subtitle mb-2 text-muted">
-                        <a href="{% url 'profile' post.user.username %}" class="text-decoration-none">{{ post.user.username }}</a>
-                    </h6>
-                    <p class="card-text">{{ post.caption|truncatechars:80 }}</p>
-                    <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-primary">View</a>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-2">
+                <div class="profile-pic-wrapper me-2">
+                    <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}"
+                         alt="Profile Picture"
+                         class="profile-pic"
+                         style="width:36px; height:36px; object-fit:cover; border-radius:50%;">
+                </div>
+                <div class="d-flex align-items-baseline">
+                    <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset me-1">
+                        {{ post.user.username }}
+                    </a>
+                    {% if post.user.role == 'student' %}
+                        <span class="badge badge-role badge-student">Student</span>
+                    {% elif post.user.role == 'society' %}
+                        <span class="badge badge-role badge-society">Society</span>
+                    {% endif %}
                 </div>
             </div>
-            {% empty %}
-                <p class="text-muted">No recent posts available.</p>
-            {% endfor %}
+
+            <p class="card-text">{{ post.caption|truncatechars:100 }}</p>
+            <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-primary">View</a>
         </div>
+    </div>
+    {% empty %}
+        <p class="text-muted">No recent posts available.</p>
+    {% endfor %}
+</div>
     </div>
 </div>
 {% endblock %}

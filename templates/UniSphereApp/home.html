@@ -23,9 +23,16 @@
                      style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
             </div>
             <div class="ms-2">
-                <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset">
-                    {{ post.user.username }}
-                </a><br>
+               <div class="d-flex align-items-baseline">
+    <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset me-1">
+        {{ post.user.username }}
+    </a>
+    {% if post.user.role == 'student' %}
+        <span class="badge badge-role badge-student align-middle">Student</span>
+    {% elif post.user.role == 'society' %}
+        <span class="badge badge-role badge-society align-middle">Society</span>
+    {% endif %}
+</div>
                 <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
             </div>
         </div>
