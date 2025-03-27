@@ -469,20 +469,17 @@ def view_all_comments(request, post_id):
     return render(request, 'UniSphereApp/all_comments.html', {'post': post, 'comments': comments})
 
 
+@require_POST
 @login_required
 def send_friend_request(request, user_id):
-    if request.method == 'POST':
-        to_user = get_object_or_404(User, id=user_id)
-        if to_user == request.user:
-            return JsonResponse({"error": "Cannot send friend request to yourself."}, status=400)
-        from .models import FriendRequest
-        friend_request, created = FriendRequest.objects.update_or_create(
-            from_user=request.user,
-            to_user=to_user,
-            defaults={'status': FriendRequest.PENDING}
-        )
-        return JsonResponse({"message": "Friend request sent."})
-    return JsonResponse({"error": "Invalid request method."}, status=405)
+    to_user = get_object_or_404(User, id=user_id)
+    if request.user != to_user:
+        friend_request, created = FriendRequest.objects.get_or_create(from_user=request.user, to_user=to_user)
+        if created:
+            return JsonResponse({"message": "Friend request sent"})
+        else:
+            return JsonResponse({"message": "Friend request already exists"}, status=400)
+    return JsonResponse({"error": "Cannot send request to yourself"}, status=400)
 
 @login_required
 def accept_friend_request(request, request_id):

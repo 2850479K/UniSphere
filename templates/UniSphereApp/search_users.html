@@ -30,39 +30,43 @@
     <!-- Students Section -->
     {% if students %}
     <h5>Students</h5>
-    <table class="table table-hover table-bordered mt-3">
-        <thead class="table-light">
-            <tr>
-                <th>Profile Picture</th>
-                <th>Username</th>
-                <th>Full Name</th>
-                <th>School</th>
-                <th>Course</th>
-                <th>Skills</th>
-                <th style="width: 240px;">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for student in students %}
-            <tr>
-                <td><img src="{{ student.get_profile_picture_url }}" alt="Profile Picture" width="60" class="rounded-circle"></td>
-                <td>{{ student.user.username }}</td>
-                <td>{{ student.full_name }}</td>
-                <td>{{ student.school|default:"N/A" }}</td>
-                <td>{{ student.course|default:"N/A" }}</td>
-                <td>{{ student.skills|default:"N/A" }}</td>
-                <td class="d-flex flex-wrap gap-1">
-                    <!-- AJAX Send Friend Request Button -->
-                    <button class="btn btn-outline-success btn-sm btn-send-request" data-student-id="{{ student.id }}">
+<table class="table table-hover table-bordered mt-3">
+    <thead class="table-light">
+        <tr>
+            <th>Profile Picture</th>
+            <th>Username</th>
+            <th>Full Name</th>
+            <th>School</th>
+            <th>Course</th>
+            <th>Skills</th>
+            <th style="width: 240px;">Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    {% for student in students %}
+        <tr>
+            <td>
+                <img src="{{ student.get_profile_picture_url }}" alt="Profile Picture" width="60" class="rounded-circle">
+            </td>
+            <td>{{ student.user.username }}</td>
+            <td>{{ student.full_name }}</td>
+            <td>{{ student.school|default:"N/A" }}</td>
+            <td>{{ student.course|default:"N/A" }}</td>
+            <td>{{ student.skills|default:"N/A" }}</td>
+            <td class="d-flex flex-wrap gap-1">
+                {% if request.user.is_authenticated and request.user.role == "student" and student.user != request.user %}
+                    <button class="btn btn-outline-success btn-sm btn-send-request"
+                            data-student-id="{{ student.user.id }}">
                         Send Friend Request
                     </button>
-                    <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-info btn-sm">View Profile</a>
-                    <a href="{% url 'contact_profile' student.id %}" class="btn btn-outline-primary btn-sm">Contact</a>
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+                {% endif %}
+                <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-info btn-sm">View Profile</a>
+                <a href="{% url 'contact_profile' student.id %}" class="btn btn-outline-primary btn-sm">Contact</a>
+            </td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
     {% else %}
         <p>No students found.</p>
     {% endif %}
