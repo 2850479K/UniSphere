@@ -35,9 +35,20 @@
     <div class="card mb-4 post-card">
         {% if post.files.all %}
             {% for file in post.files.all|slice:":1" %}
-                {% if file.file.url|lower|slice:"-4:" == ".jpg" or file.file.url|lower|slice:"-4:" == ".png" %}
-                    <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
-                {% endif %}
+                {% with file_url=file.file.url|lower %}
+    {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
+        <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
+    {% elif ".mp4" in file_url or ".mov" in file_url or ".webm" in file_url %}
+        <video controls class="card-img-top" style="height: 180px; object-fit: cover;">
+            <source src="{{ file.file.url }}">
+            Your browser does not support the video tag.
+        </video>
+    {% elif ".pdf" in file_url or ".docx" in file_url or ".doc" in file_url %}
+        <div class="p-2">
+            <a href="{{ file.file.url }}" target="_blank" class="btn btn-outline-primary">📄 View Document</a>
+        </div>
+    {% endif %}
+{% endwith %}
             {% endfor %}
         {% endif %}
 
