@@ -62,7 +62,6 @@ def profile_posts(request, username):
 def create_profile(request):
     if request.user.role == 'student':
         profile, created = StudentProfile.objects.get_or_create(user=request.user)
-
         if request.method == 'POST':
             form = CreateProfileForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
@@ -71,12 +70,18 @@ def create_profile(request):
                 return redirect('profile', username=request.user.username)
         else:
             form = CreateProfileForm(instance=profile)
+        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
     elif request.user.role == 'society':
         profile, created = SocietyProfile.objects.get_or_create(user=request.user)
 
+        if created:
+            # Automatically set contact_email from user.email on first profile creation
+            profile.contact_email = request.user.email
+            profile.save()
+
         if request.method == 'POST':
-            form = SocietyCreateProfileForm(request.POST, instance=profile)
+            form = SocietyCreateProfileForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():
                 form.save()
                 messages.success(request, "Society profile created successfully!")
@@ -84,11 +89,7 @@ def create_profile(request):
         else:
             form = SocietyCreateProfileForm(instance=profile)
 
-    else:
-        messages.error(request, "Invalid user role.")
-        return redirect('home')
-
-    return render(request, 'UniSphereApp/create_profile.html', {'form': form})
+        return render(request, 'UniSphereApp/create_profile.html', {'form': form})
 
 @login_required
 def profile(request, username):
@@ -478,7 +479,13 @@ def edit_society_profile(request):
     if request.method == 'POST':
         form = SocietyProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            form.save()
+            profile = form.save()
+
+            # Sync the contact_email back to user.email
+            if profile.contact_email:
+                request.user.email = profile.contact_email
+                request.user.save()
+
             messages.success(request, "Society profile updated successfully!")
             return redirect('profile', username=request.user.username)
     else:

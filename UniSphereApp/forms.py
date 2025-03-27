@@ -94,4 +94,4 @@ class SocietyProfileForm(forms.ModelForm):
 class SocietyCreateProfileForm(forms.ModelForm):
     class Meta:
         model = SocietyProfile
-        fields = ['society_name', 'contact_email']
+        fields = ['society_name']
