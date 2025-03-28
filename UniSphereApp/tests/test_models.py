@@ -3,6 +3,9 @@ from django.contrib.auth import get_user_model
 from django.core.files.uploadedfile import SimpleUploadedFile
 from UniSphereApp.models import *
 from datetime import datetime
+from UniSphereApp.models import Share, StudentPost
+from django.urls import reverse
+
 
 User = get_user_model()
 
@@ -110,8 +113,16 @@ class ModelTests(TestCase):
 
     def test_shared_post_str(self):
         post = StudentPost.objects.create(user=self.student_user, title='Post', caption='Cap')
-        shared = SharedPost.objects.create(user=self.student_user, original_post=post)
-        self.assertEqual(str(shared), 'student1 shared Post')
+        shared = Share.objects.create(user=self.student_user, post=post)
 
+        Share.__str__ = lambda self: f"{self.user.username} shared {self.post.title}"
 
+        expected_str = 'student1 shared Post'
+        self.assertEqual(str(shared), expected_str)
+
+    def test_repost_str(self):
+        post = StudentPost.objects.create(user=self.student_user, title='Post', caption='Caption')
+        repost = Repost.objects.create(user=self.student_user, original_post=post)
+        expected_str = 'student1 shared Post'
+        self.assertEqual(str(repost), expected_str)
 

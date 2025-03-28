@@ -97,10 +97,6 @@ def create_profile(request):
     elif request.user.role == 'society':
         profile, created = SocietyProfile.objects.get_or_create(user=request.user)
 
-        if created:
-            profile.contact_email = request.user.email
-            profile.save()
-
         if request.method == 'POST':
             form = SocietyCreateProfileForm(request.POST, request.FILES, instance=profile)
             if form.is_valid():

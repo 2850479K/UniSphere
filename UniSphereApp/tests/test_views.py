@@ -2,12 +2,13 @@ from django.test import TestCase, Client
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from django.contrib.auth import get_user_model
-from UniSphereApp.forms import ProjectForm
+from UniSphereApp.forms import ProjectForm, SocietyCreateProfileForm
 from django.contrib.messages import get_messages
-from UniSphereApp.models import User, StudentProfile, StudentPost, Project, PostFile, SocietyProfile, Comment, SharedPost, Comment, FriendRequest
+from UniSphereApp.models import User, StudentProfile, StudentPost, Project, PostFile, SocietyProfile, Comment, Share, Comment, FriendRequest, Repost, Like
 import shutil
 import os
 from django.conf import settings
+from UniSphereApp.views import get_friends
 
 User = get_user_model()
 
@@ -38,10 +39,8 @@ class ViewTests(TestCase):
             contact_email='society@example.com'
         )
 
-        # 登录 student1
         self.client.login(username='student1', password='pass1234')
 
-        # 一个项目和帖子，属于 student1
         self.project = Project.objects.create(
             user=self.student1_user,
             title='Test Project',
@@ -118,16 +117,48 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'UniSphereApp/register.html')
 
-    def test_login_invalid(self):
+    def test_register_post_valid(self):
+        data = {
+            'username': 'newuser',
+            'email': 'newuser@example.com',
+            'password1': 'testpassword123',
+            'password2': 'testpassword123',
+            'role': 'student',
+        }
+        response = self.client.post(reverse('register'), data)
+        self.assertEqual(response.status_code, 302)  # Redirect
+        self.assertRedirects(response, reverse('create_profile'))
+        self.assertTrue(User.objects.filter(username='newuser').exists())
+
+    # Login
+    def test_login_valid(self):
         response = self.client.post(reverse('login'), {
-            'username': 'wrong',
-            'password': 'invalid'
+            'username': 'student1',
+            'password': 'pass1234'
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertRedirects(response, reverse('profile', kwargs={'username': 'student1'}))
+        self.assertTemplateUsed(response, 'UniSphereApp/student_profile.html')
+
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("successfully logged in" in str(m) for m in messages_list))
+
+    def test_login_invalid(self):
+        self.client.logout()
+
+        response = self.client.post(reverse('login'), {
+            'username': 'wronguser',
+            'password': 'invalidpass'
         })
         self.assertEqual(response.status_code, 200)
-        messages = list(get_messages(response.wsgi_request))
-        self.assertTrue(any("Invalid username or password" in str(m) for m in messages))
 
-    def test_profile_posts_view(self):
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(
+            any("Invalid username or password" in str(m) for m in messages)
+        )
+
+    def test_profile_posts_student(self):
         StudentPost.objects.create(
             user=self.student1_user,
             title='Post 1',
@@ -138,13 +169,34 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'UniSphereApp/profile_posts.html')
         self.assertIn('posts', response.context)
+        self.assertEqual(response.context['profile'].user, self.student1_user)
 
-    def test_create_profile_student(self):
-        self.client.login(username='student1', password='pass1234')
-        url = reverse('create_profile')
+    def test_profile_posts_society(self):
+        url = reverse('profile_posts', kwargs={'username': self.society_user.username})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/profile_posts.html')
+        self.assertIn('posts', response.context)
+        self.assertEqual(response.context['profile'].user, self.society_user)
+
+    def test_profile_posts_unknown_role(self):
+        unknown_user = User.objects.create_user(username='unknown', password='12345', role='unknown')
+        url = reverse('profile_posts', kwargs={'username': unknown_user.username})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/profile_posts.html')
+        self.assertIn('posts', response.context)
+        self.assertIsNone(response.context['profile'])
+
+    def test_create_profile_society_get(self):
+        self.client.login(username='society1', password='pass1234')
+        url = reverse('create_profile')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'UniSphereApp/create_profile.html')
+        self.assertIn('form', response.context)
+        self.assertIsInstance(response.context['form'], SocietyCreateProfileForm)
 
 
     def test_create_profile_student_post(self):
@@ -157,24 +209,20 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(StudentProfile.objects.filter(user=self.student1_user).exists())
 
-    def test_create_profile_society(self):
-        self.client.login(username='society1', password='pass1234')
-        url = reverse('create_profile')
-        response = self.client.get(url)
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'UniSphereApp/create_profile.html')
-
-
     def test_create_profile_society_post(self):
         self.client.login(username='society1', password='pass1234')
         url = reverse('create_profile')
         response = self.client.post(url, {
-            'society_name': 'New Society',
-            'contact_email': 'new@example.com'
+            'society_name': 'Official Society',
+            'contact_email': 'official_society@example.com'
         })
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(SocietyProfile.objects.filter(user=self.society_user).exists())
 
+        profile = SocietyProfile.objects.get(user=self.society_user)
+        self.assertEqual(profile.society_name, 'Official Society')
+        self.assertEqual(profile.contact_email, 'official_society@example.com')
+
+    # Profile View
     def test_profile_view_as_owner_student(self):
         self.client.login(username='student1', password='pass1234')
         url = reverse('profile', kwargs={'username': self.student1_user.username})
@@ -226,6 +274,42 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFalse(self.society_profile.members.filter(id=self.student2_profile.id).exists())
 
+    def test_profile_view_as_friend(self):
+        self.student1_profile.friends.add(self.student2_profile)
+
+        self.client.login(username='student2', password='pass1234')
+        url = reverse('profile', kwargs={'username': self.student1_user.username})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/student_profile.html')
+        self.assertTrue(response.context['is_friend'])
+
+    def test_profile_view_friend_request_sent(self):
+        FriendRequest.objects.create(from_user=self.student2_user, to_user=self.student1_user, status='pending')
+
+        self.client.login(username='student2', password='pass1234')
+        url = reverse('profile', kwargs={'username': self.student1_user.username})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/student_profile.html')
+        self.assertTrue(response.context['friend_request_sent'])
+
+    def test_profile_view_student_profile_does_not_exist(self):
+        no_profile_user = User.objects.create_user(username='noprofile', password='testpass', role='student')
+        self.client.login(username='noprofile', password='testpass')
+
+        url = reverse('profile', kwargs={'username': self.student1_user.username})
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/student_profile.html')
+
+        self.assertFalse(response.context['is_friend'])
+        self.assertFalse(response.context['friend_request_sent'])
+
+    # Remove friend
     def test_remove_friend_post(self):
         self.student1_profile.friends.add(self.student2_profile)
         self.student2_profile.friends.add(self.student1_profile)
@@ -234,7 +318,7 @@ class ViewTests(TestCase):
         url = reverse('remove_friend', kwargs={'user_id': self.student2_user.id})
         response = self.client.post(url)
 
-        self.assertRedirects(response, reverse('friend_requests'))
+        self.assertRedirects(response, reverse('friend_requests', kwargs={'username': 'student1'}))
 
         self.student1_profile.refresh_from_db()
         self.student2_profile.refresh_from_db()
@@ -247,8 +331,33 @@ class ViewTests(TestCase):
         url = reverse('remove_friend', kwargs={'user_id': self.student2_user.id})
         response = self.client.get(url)
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('friend_requests'))
+        self.assertRedirects(response, reverse('friend_requests', kwargs={'username': 'student1'}))
 
+    def test_remove_friend_invalid_user(self):
+        self.client.login(username='student1', password='pass1234')
+        invalid_user_id = 9999
+
+        url = reverse('remove_friend', kwargs={'user_id': invalid_user_id})
+        response = self.client.post(url)
+
+        self.assertEqual(response.status_code, 404)
+
+    def test_remove_friend_exception_handled(self):
+        self.client.login(username='student1', password='pass1234')
+
+        self.student2_profile.delete()
+
+        url = reverse('remove_friend', kwargs={'user_id': self.student2_user.id})
+        response = self.client.post(url, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/friend_requests.html')
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("went wrong" in str(m) for m in messages))
+
+
+    #My profile
     def test_my_profile_redirect(self):
         self.client.login(username='student1', password='pass1234')
         response = self.client.get(reverse('my_profile'))
@@ -278,6 +387,21 @@ class ViewTests(TestCase):
         self.student2_profile.refresh_from_db()
         self.assertEqual(self.student2_profile.full_name, 'New Name')
 
+    def test_edit_project_invalid_post(self):
+        self.client.login(username='student1', password='pass1234')
+
+        url = reverse('edit_project', kwargs={'project_id': self.project.id})
+
+        response = self.client.post(url, {
+            'title': '',
+            'description': 'Missing title so this should fail.'
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/edit_project.html')
+
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("Error updating project" in str(m) for m in messages_list))
 
     #Portfolios & Projects
     def test_user_portfolio_view(self):
@@ -387,6 +511,19 @@ class ViewTests(TestCase):
         response = self.client.get(url)
         self.assertRedirects(response, reverse('project', kwargs={'project_id': self.project.id}))
 
+    def test_delete_project_unauthorized_user(self):
+        self.client.login(username='testuser', password='testpass')
+
+        url = reverse('delete_project', kwargs={'project_id': self.project.id})
+        response = self.client.post(url)
+
+        self.assertRedirects(response, reverse('project', kwargs={'project_id': self.project.id}))
+
+        self.assertTrue(Project.objects.filter(id=self.project.id).exists())
+
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("not authorized to delete" in str(m) for m in messages_list))
+
 
     #Post
     def test_create_post_get(self):
@@ -404,6 +541,7 @@ class ViewTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertTrue(StudentPost.objects.filter(title='New Post').exists())
+
 
     def test_edit_post_get(self):
         self.client.login(username='student1', password='pass1234')
@@ -482,6 +620,30 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.json()['liked'])
 
+    def test_unlike_post(self):
+        self.client.login(username='testuser', password='testpass')
+        Like.objects.create(user=self.test_user1, post=self.post)
+
+        response = self.client.post(
+            reverse('like_post', args=[self.post.id]),
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.json()['liked'])
+        self.assertEqual(self.post.likes.count(), 0)
+
+    def test_like_post_redirects_to_project(self):
+        self.client.login(username='testuser', password='testpass')
+        self.post.project = self.project
+        self.post.save()
+
+        response = self.client.post(reverse('like_post', args=[self.post.id]), follow=True)
+
+        self.assertRedirects(
+            response,
+            reverse('project', kwargs={'project_id': self.project.id})
+        )
+
 
     # friend request
     def test_send_friend_request(self):
@@ -518,13 +680,15 @@ class ViewTests(TestCase):
         response = self.client.get(reverse('decline_friend_request', args=[fr.id]))
 
         self.assertEqual(response.status_code, 302)
-        self.assertRedirects(response, reverse('friend_requests'))
+        response = self.client.get(reverse('friend_requests', kwargs={'username': 'testuser2'}))
         self.assertFalse(FriendRequest.objects.filter(id=fr.id).exists())
 
     def test_friend_requests_view(self):
         FriendRequest.objects.create(from_user=self.test_user1, to_user=self.test_user2)
+
         self.client.login(username='testuser2', password='testpass2')
-        response = self.client.get(reverse('friend_requests'))
+        response = self.client.get(reverse('friend_requests', kwargs={'username': 'testuser2'}))
+
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'UniSphereApp/friend_requests.html')
 
@@ -532,20 +696,38 @@ class ViewTests(TestCase):
     def test_share_post(self):
         self.client.login(username='testuser', password='testpass')
         self.assertFalse(
-            SharedPost.objects.filter(user=self.test_user1, original_post=self.post).exists()
+            Share.objects.filter(user=self.test_user1, post=self.post).exists()
         )
         response = self.client.post(reverse('share_post', args=[self.post.id]))
-        self.assertRedirects(response, reverse('shared_posts_list'))
-        self.assertTrue(
-            SharedPost.objects.filter(user=self.test_user1, original_post=self.post).exists()
+
+        self.assertRedirects(
+            response,
+            reverse('user_reposts', kwargs={'username': self.test_user1.username})
         )
 
     def test_shared_posts_list(self):
-        SharedPost.objects.create(user=self.test_user1, original_post=self.post)
+        Share.objects.create(user=self.test_user1, post=self.post)
+
         self.client.login(username='testuser', password='testpass')
-        response = self.client.get(reverse('shared_posts_list'))
+        response = self.client.get(reverse('user_reposts', kwargs={'username': 'testuser'}))
+
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'UniSphereApp/shared_posts.html')
+        self.assertTemplateUsed(response, 'UniSphereApp/user_reposts.html')
+
+    def test_share_post_duplicate_warning(self):
+        Repost.objects.create(user=self.test_user1, original_post=self.post)
+
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.post(reverse('share_post', args=[self.post.id]), follow=True)
+
+        self.assertRedirects(
+            response,
+            reverse('user_reposts', kwargs={'username': self.test_user1.username})
+        )
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("already shared this post" in str(m) for m in messages))
+
 
     # Societies
     def test_edit_society_profile_get(self):
@@ -553,6 +735,27 @@ class ViewTests(TestCase):
         response = self.client.get(reverse('edit_society_profile'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'UniSphereApp/edit_society.html')
+
+    def test_edit_society_profile_post(self):
+        self.client.login(username='society1', password='pass1234')
+        url = reverse('edit_society_profile')
+        response = self.client.post(url, {
+            'society_name': 'Updated Society Name',
+            'contact_email': 'updated_society@example.com'
+        }, follow=True)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'UniSphereApp/society_profile.html')
+
+        updated_profile = SocietyProfile.objects.get(user=self.society_user)
+        self.assertEqual(updated_profile.society_name, 'Updated Society Name')
+        self.assertEqual(updated_profile.contact_email, 'updated_society@example.com')
+
+        self.assertEqual(updated_profile.user.email, 'updated_society@example.com')
+
+        messages_list = list(get_messages(response.wsgi_request))
+        self.assertTrue(any("updated successfully" in str(m) for m in messages_list))
+
 
     def test_contact_profile_student(self):
         self.client.login(username='testuser', password='testpass')
@@ -572,6 +775,33 @@ class ViewTests(TestCase):
         response = self.client.get(reverse('society_members', args=[self.society_user.username]))
         self.assertEqual(response.status_code, 200)
         self.assertIn('society', response.context)
+
+    def test_student_join_society(self):
+        self.client.login(username='student1', password='pass1234')
+        url = reverse('society_members', args=[self.society_user.username])
+        response = self.client.post(url, {'action': 'join'})
+        self.assertRedirects(response, url)
+        self.assertTrue(self.society_profile.members.filter(id=self.student1_profile.id).exists())
+
+    def test_student_leave_society(self):
+        self.society_profile.members.add(self.student1_profile)
+        self.client.login(username='student1', password='pass1234')
+        url = reverse('society_members', args=[self.society_user.username])
+        response = self.client.post(url, {'action': 'leave'})
+        self.assertRedirects(response, url)
+        self.assertFalse(self.society_profile.members.filter(id=self.student1_profile.id).exists())
+
+    def test_society_kick_student(self):
+        self.society_profile.members.add(self.student1_profile)
+        self.client.login(username='society1', password='pass1234')
+        url = reverse('society_members', args=[self.society_user.username])
+        response = self.client.post(url, {
+            'action': 'kick',
+            'student_id': self.student1_profile.id
+        })
+        self.assertRedirects(response, url)
+        self.assertFalse(self.society_profile.members.filter(id=self.student1_profile.id).exists())
+
 
     def test_joined_societies_view(self):
         self.test_profile1.joined_societies.add(self.society_profile)
