@@ -5,7 +5,6 @@
 
 {% block content %}
 <div class="container my-4">
-    <!-- Create New Post Button (visible only to profile owner) -->
     {% if request.user == profile.user %}
     <div class="text-center mb-3">
         <a href="{% url 'create_profile_post' %}" class="btn btn-success">Create New Post</a>

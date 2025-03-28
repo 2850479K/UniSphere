@@ -15,28 +15,28 @@
                     <a href="{% url 'edit_profile' %}" class="btn btn-primary mb-3">Edit Profile</a>
                 {% else %}
                     {% if request.user.is_authenticated and request.user.role == "student" and not is_owner %}
-    {% if is_friend %}
-        <button type="button" class="btn btn-danger remove-friend mb-3" data-target-id="{{ profile_user.id }}">
-            Remove Friend
-        </button>
-    {% elif friend_request_sent %}
-        <button type="button" class="btn btn-secondary mb-3" disabled>
-            Request Sent
-        </button>
-    {% else %}
-        <button type="button" class="btn btn-send-request btn-outline-primary mb-3" data-target-id="{{ profile_user.id }}">
-            Send Friend Request
-        </button>
-    {% endif %}
-{% endif %}
+                        {% if is_friend %}
+                            <button type="button" class="btn btn-danger remove-friend mb-3" data-target-id="{{ profile_user.id }}">
+                                Remove Friend
+                            </button>
+                        {% elif friend_request_sent %}
+                            <button type="button" class="btn btn-secondary mb-3" disabled>
+                                Request Sent
+                            </button>
+                        {% else %}
+                            <button type="button" class="btn btn-send-request btn-outline-primary mb-3" data-target-id="{{ profile_user.id }}">
+                                Send Friend Request
+                            </button>
+                        {% endif %}
+                    {% endif %}
                 {% endif %}
                 <a href="{% url 'friend_requests' profile_user.username %}" class="btn btn-warning mb-3">Friend List</a>
                 <a href="{% url 'joined_societies' profile_user.username %}" class="btn btn-outline-primary mb-3">
                     View Societies
                 </a>
                 <a href="{% url 'user_reposts' profile_user.username %}" class="btn btn-outline-secondary mb-3">
-    View Reposts
-</a>
+                    View Reposts
+                </a>
             </div>
             {% if profile.full_name and profile.full_name != "Not set" %}
                 <p><strong>Full Name:</strong> {{ profile.full_name }}</p>
@@ -117,81 +117,4 @@
         </div>
     </div>
 </div>
-
-<script>
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let cookie of cookies) {
-            cookie = cookie.trim();
-            if (cookie.startsWith(name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    const csrftoken = getCookie('csrftoken');
-    document.querySelectorAll(".btn-send-request").forEach(button => {
-        button.addEventListener("click", function() {
-            const targetId = button.getAttribute("data-target-id");
-            fetch(`/friend-request/send/${targetId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if(!response.ok){
-                    throw new Error(`Network response was not ok. Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data.message);
-                button.disabled = true;
-                button.innerText = "Request Sent";
-                button.classList.remove("btn-outline-primary");
-                button.classList.add("btn-secondary");
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
-        });
-    });
-    document.querySelectorAll(".remove-friend").forEach(button => {
-        button.addEventListener("click", function() {
-            const targetId = button.getAttribute("data-target-id");
-            fetch(`/remove_friend/${targetId}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': csrftoken,
-                    'Content-Type': 'application/json'
-                }
-            })
-            .then(response => {
-                if(!response.ok){
-                    throw new Error(`Network response was not ok. Status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log(data.message);
-                button.disabled = true;
-                button.innerText = "Friend Removed";
-                button.classList.remove("btn-danger");
-                button.classList.add("btn-secondary");
-            })
-            .catch(error => {
-                console.error("Error:", error);
-            });
-        });
-    });
-});
-</script>
 {% endblock %}

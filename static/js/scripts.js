@@ -54,4 +54,102 @@ document.addEventListener("DOMContentLoaded", function () {
         return new bootstrap.Toast(toastEl, { delay: 3000 }); // Auto-dismiss after 3 seconds
     });
     toastList.forEach(toast => toast.show());
+
+    // Tooltip initialization for elements with data-bs-toggle="tooltip"
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+
+    // Friend request send handler
+    document.querySelectorAll(".btn-send-request").forEach(button => {
+        button.addEventListener("click", function() {
+            const idAttr = button.getAttribute("data-student-id") || button.getAttribute("data-target-id");
+            const csrftoken = getCSRFToken();
+            fetch(`/friend-request/send/${idAttr}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ student_id: idAttr })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+                showToast(data.message, 'success');
+                button.disabled = true;
+                button.innerText = "Request Sent";
+                button.classList.remove("btn-outline-success", "btn-outline-primary");
+                button.classList.add("btn-secondary");
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                showToast("An error occurred", "danger");
+            });
+        });
+    });
+
+    // Friend removal handler
+    document.querySelectorAll(".remove-friend").forEach(button => {
+        button.addEventListener("click", function() {
+            const targetId = button.getAttribute("data-target-id");
+            const csrftoken = getCSRFToken();
+            fetch(`/remove_friend/${targetId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrftoken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok. Status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(data.message);
+                button.disabled = true;
+                button.innerText = "Friend Removed";
+                button.classList.remove("btn-danger");
+                button.classList.add("btn-secondary");
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    });
 });
+
+// Function to show toast notifications
+function showToast(message, type = 'info') {
+    const toastId = 'toast-' + Date.now();
+    const toastHtml = `
+        <div id="${toastId}" class="toast align-items-center text-white bg-${type} border-0 mb-2"
+             role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body">${message}</div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto"
+                        data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
+    `;
+    const container = document.querySelector('.toast-container');
+    if (container) {
+        container.insertAdjacentHTML('beforeend', toastHtml);
+        const toastElement = document.getElementById(toastId);
+        const toast = new bootstrap.Toast(toastElement);
+        toast.show();
+        toastElement.addEventListener('hidden.bs.toast', () => {
+            toastElement.remove();
+        });
+    } else {
+        console.warn("Toast container not found.");
+    }
+}

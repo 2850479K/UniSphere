@@ -66,19 +66,19 @@
                     {% endif %}
 
                     <a href="{% url 'profile' student.user.username %}" class="btn btn-outline-primary btn-sm mt-2 me-2">
-    <i class="bi bi-person-circle"></i> View Profile
-</a>
+                        <i class="bi bi-person-circle"></i> View Profile
+                    </a>
 
-{% if user.is_authenticated and user == society.user %}
-    <form method="post" style="display: inline;">
-        {% csrf_token %}
-        <input type="hidden" name="action" value="kick">
-        <input type="hidden" name="student_id" value="{{ student.id }}">
-        <button type="submit" class="btn btn-danger btn-sm mt-2">
-            <i class="bi bi-person-x"></i> Kick
-        </button>
-    </form>
-{% endif %}
+                    {% if user.is_authenticated and user == society.user %}
+                    <form method="post" style="display: inline;">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="kick">
+                        <input type="hidden" name="student_id" value="{{ student.id }}">
+                        <button type="submit" class="btn btn-danger btn-sm mt-2">
+                            <i class="bi bi-person-x"></i> Kick
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -88,13 +88,4 @@
         <p>No members have joined this society yet.</p>
     {% endif %}
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-        tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-            new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-    });
-</script>
 {% endblock %}

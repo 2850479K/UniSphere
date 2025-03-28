@@ -1,6 +1,4 @@
-/* -------------------------------------------------- */
 /* Global Reset and Layout */
-/* -------------------------------------------------- */
 html, body {
     height: 100%;
     margin: 0;
@@ -17,9 +15,7 @@ html, body {
     flex: 1;
 }
 
-/* -------------------------------------------------- */
-/* Modern Header Styling */
-/* -------------------------------------------------- */
+/*Header Styling */
 .modern-header {
     display: flex;
     justify-content: space-between;
@@ -103,9 +99,7 @@ html, body {
     }
 }
 
-/* -------------------------------------------------- */
 /* Profile Edit Form Styling */
-/* -------------------------------------------------- */
 .custom-form input,
 .custom-form textarea,
 .custom-form select {
@@ -129,9 +123,7 @@ html, body {
     width: 100%;
 }
 
-/* -------------------------------------------------- */
 /* Heart Like & Post Feed Styling */
-/* -------------------------------------------------- */
 .heart {
     font-size: 24px;
     transition: transform 0.2s ease, color 0.3s ease;
@@ -205,11 +197,9 @@ html, body {
     font-size: 14px;
 }
 
-/* -------------------------------------------------- */
 /* Footer Styling */
-/* -------------------------------------------------- */
 footer {
-    background-color: #fff; /* White background for the footer */
+    background-color: #fff; /*  background for the footer */
 }
 
 footer a {
@@ -244,12 +234,12 @@ footer a:hover {
 }
 
 .badge-student {
-  background-color: #b983ff; /* Softer lavender */
+  background-color: #b983ff;
   color: white;
 }
 
 .badge-society {
-  background-color: #75c798; /* Soft green */
+  background-color: #75c798;
   color: white;
 }
 

@@ -18,18 +18,17 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-# ----------------------------------
+
 # File paths
-# ----------------------------------
+
 MEDIA_ROOT = settings.MEDIA_ROOT
 PROFILE_PICS = os.path.join(MEDIA_ROOT, 'profiles')
 POST_IMAGES = os.path.join(MEDIA_ROOT, 'posts', 'images')
 POST_DOCS = os.path.join(MEDIA_ROOT, 'posts', 'docs')
 POST_VIDEOS = os.path.join(MEDIA_ROOT, 'posts', 'videos')
 
-# ----------------------------------
+
 # Media Mapping (project + caption)
-# ----------------------------------
 media_map = {
     "digital art.jpg": ("Concept Art", "Playing with light and shadow in digital art."),
     "chess.jpg": ("Chess Tactics App", "Analyzing chess strategies for tournaments."),
@@ -53,9 +52,7 @@ media_map = {
     "science lab.mp4": ("STEM Club", "Experiment from last week’s lab."),
 }
 
-# ----------------------------------
 # Users
-# ----------------------------------
 students = [
     {"username": "leo.turner", "full_name": "Leo Turner", "school": "UCL", "course": "Architecture", "pic": "student1.jpg"},
     {"username": "emily.chen", "full_name": "Emily Chen", "school": "Glasgow", "course": "Medicine", "pic": "student2.jpg"},
@@ -71,9 +68,7 @@ societies = [
     {"username": "fin", "society_name": "Finance Society", "category": "Business", "logo": "finance society.jpg"},
 ]
 
-# ----------------------------------
 # Utilities
-# ----------------------------------
 def get_file(path):
     with open(path, "rb") as f:
         return SimpleUploadedFile(os.path.basename(path), f.read())
@@ -93,9 +88,7 @@ def attach_media_to_post(post, filename):
         return
     PostFile.objects.create(post=post, file=get_file(path))
 
-# ----------------------------------
 # Creation logic
-# ----------------------------------
 def create_users():
     for s in students:
         user, _ = User.objects.get_or_create(username=s["username"], defaults={"email": f"{s['username']}@mail.com", "role": "student"})
@@ -127,13 +120,13 @@ def create_users():
             profile.contact_email = user.email
             profile.social_links = "https://instagram.com/example"
 
-            # ✅ Attempt to load specified logo
+            # Attempt to load specified logo
             logo_path = os.path.join(PROFILE_PICS, s['logo'])
             if os.path.exists(logo_path):
                 with open(logo_path, 'rb') as f:
                     profile.logo.save(s['logo'], File(f), save=False)
             else:
-                # ✅ Fallback: pick any logo to assign
+                # Fallback: pick any logo to assign
                 random_logo = get_random_file(PROFILE_PICS)
                 if random_logo:
                     with open(random_logo, 'rb') as f:
@@ -174,7 +167,7 @@ def create_interactions(posts):
         "Love your style.", "Fantastic explanation!"
     ]
     
-    # General interactions (likes/comments)
+    # General interactions like likes/comments
     for post in posts:
         sample_users = random.sample(users, min(4, len(users)))
         for user in sample_users:
@@ -207,9 +200,6 @@ def create_friendships():
         student1.friends.add(student2)
         student2.friends.add(student1)
 
-# ----------------------------------
-# Run everything
-# ----------------------------------
 def run():
     print("🌍 Populating UniSphere...")
     create_users()
