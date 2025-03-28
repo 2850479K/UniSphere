@@ -348,6 +348,7 @@ def edit_post(request, post_id):
                 return redirect('profile', username=post.user.username)
         else:
             messages.error(request, "Error updating post. Please check the form.")
+            existing_files = PostFile.objects.filter(post=post)
     else:
         form = StudentPostForm(instance=post)
         existing_files = PostFile.objects.filter(post=post)
@@ -452,8 +453,8 @@ def get_comments(request, post_id):
     return JsonResponse({"comments": comments_data})
 
 def get_friends(user):
-    sent = FriendRequest.objects.filter(from_user=user, accepted=True).values_list('to_user', flat=True)
-    received = FriendRequest.objects.filter(to_user=user, accepted=True).values_list('from_user', flat=True)
+    sent = FriendRequest.objects.filter(from_user=user, status=FriendRequest.ACCEPTED).values_list('to_user', flat=True)
+    received = FriendRequest.objects.filter(to_user=user, status=FriendRequest.ACCEPTED).values_list('from_user', flat=True)
     friend_ids = list(sent) + list(received)
     return User.objects.filter(id__in=friend_ids)
 

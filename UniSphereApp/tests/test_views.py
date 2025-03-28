@@ -25,7 +25,14 @@ class ViewTests(TestCase):
             password='pass1234',
             role='student'
         )
-        self.student1_profile = StudentProfile.objects.create(user=self.student1_user)
+        self.student1_profile = StudentProfile.objects.create(
+            user=self.student1_user,
+            full_name="Alice Django",
+            school="Test University",
+            course="CS101",
+            interests="Django",
+            skills="Python"
+        )
 
         # society1
         self.society_user = User.objects.create_user(
@@ -35,8 +42,10 @@ class ViewTests(TestCase):
         )
         self.society_profile = SocietyProfile.objects.create(
             user=self.society_user,
-            society_name='Test Society',
-            contact_email='society@example.com'
+            society_name="Tech Society",
+            category="Technology",
+            description="A tech group",
+            contact_email="society@example.com"
         )
 
         self.client.login(username='student1', password='pass1234')
@@ -558,11 +567,81 @@ class ViewTests(TestCase):
         self.post.refresh_from_db()
         self.assertEqual(self.post.title, 'Updated Title')
 
+    def test_edit_post_unauthorized_redirects(self):
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('edit_post', args=[self.post.id]), follow=True)
+        self.assertRedirects(response, reverse('project', kwargs={'project_id': self.post.project.id}))
+        self.assertContains(response, "You are not authorized to edit this post.")
+
+    def test_edit_post_unauthorized_redirects_to_profile_when_no_project(self):
+        self.profile_post.user = self.test_user1
+        self.profile_post.save()
+        self.client.login(username='student1', password='pass1234')
+        response = self.client.get(reverse('edit_post', args=[self.profile_post.id]), follow=True)
+        self.assertRedirects(response, reverse('profile', kwargs={'username': self.test_user1.username}))
+
+    def test_edit_post_with_file_upload(self):
+        self.client.login(username='student1', password='pass1234')
+
+        file = SimpleUploadedFile("newfile.txt", b"new content", content_type="text/plain")
+
+        response = self.client.post(
+            reverse('edit_post', args=[self.post.id]),
+            data={
+                'title': 'Updated Title',
+                'caption': 'Updated caption',
+                'files': [file]
+            },
+            follow=True
+        )
+
+        self.post.refresh_from_db()
+        self.assertEqual(self.post.title, 'Updated Title')
+
+        self.assertTrue(PostFile.objects.filter(post=self.post, file='uploads/newfile.txt').exists())
+
+        if self.post.project:
+            expected_url = reverse('project', kwargs={'project_id': self.post.project.id})
+        else:
+            expected_url = reverse('profile', kwargs={'username': self.post.user.username})
+
+        self.assertRedirects(response, expected_url, status_code=302, target_status_code=200)
+
+
     def test_delete_post_post(self):
         self.client.login(username='student1', password='pass1234')
         response = self.client.post(reverse('delete_post', args=[self.post.id]))
         self.assertRedirects(response, reverse('project', args=[self.project.id]))
         self.assertFalse(StudentPost.objects.filter(id=self.post.id).exists())
+
+    def test_delete_post_unauthorized_redirects_to_project(self):
+        self.client.login(username='testuser', password='testpass')
+        response = self.client.get(reverse('delete_post', args=[self.post.id]), follow=True)
+        self.assertRedirects(response, reverse('project', kwargs={'project_id': self.project.id}))
+        self.assertContains(response, "You are not authorized to delete this post.")
+
+    def test_delete_post_unauthorized_redirects_to_profile_when_no_project(self):
+        self.profile_post.user = self.test_user1
+        self.profile_post.save()
+        self.client.login(username='student1', password='pass1234')
+        response = self.client.get(reverse('delete_post', args=[self.profile_post.id]), follow=True)
+        self.assertRedirects(response, reverse('profile', kwargs={'username': self.test_user1.username}))
+
+    def test_delete_post_post_redirects_to_profile_when_no_project(self):
+        self.client.login(username='student1', password='pass1234')
+        response = self.client.post(reverse('delete_post', args=[self.profile_post.id]), follow=True)
+        self.assertRedirects(response, reverse('profile', kwargs={'username': 'student1'}))
+        self.assertFalse(StudentPost.objects.filter(id=self.profile_post.id).exists())
+
+    def test_delete_post_get_redirects_to_project(self):
+        self.client.login(username='student1', password='pass1234')
+        response = self.client.get(reverse('delete_post', args=[self.post.id]))
+        self.assertRedirects(response, reverse('project', kwargs={'project_id': self.project.id}))
+
+    def test_delete_post_get_redirects_to_profile_when_no_project(self):
+        self.client.login(username='student1', password='pass1234')
+        response = self.client.get(reverse('delete_post', args=[self.profile_post.id]))
+        self.assertRedirects(response, reverse('profile', kwargs={'username': 'student1'}))
 
     def test_view_post(self):
         response = self.client.get(reverse('view_post', args=[self.post.id]))
@@ -584,6 +663,79 @@ class ViewTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(response.context['show_results'])
         self.assertIn(self.student1_profile, response.context['students'])
+
+    def test_search_users_student_by_school(self):
+        response = self.client.get(reverse('search_users'), {'school': 'Test University'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.student1_profile, response.context['students'])
+
+    def test_search_users_student_by_skills(self):
+        response = self.client.get(reverse('search_users'), {'skills': 'Python'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.student1_profile, response.context['students'])
+
+    def test_search_users_society_match(self):
+        response = self.client.get(reverse('search_users'), {'society_name': 'Tech Society'})
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.context['show_results'])
+        self.assertIn(self.society_profile, response.context['societies'])
+
+    def test_search_users_society_by_category(self):
+        response = self.client.get(reverse('search_users'), {'category': 'Technology'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.society_profile, response.context['societies'])
+
+    def test_search_users_society_by_email(self):
+        response = self.client.get(reverse('search_users'), {'contact_email': 'society@example.com'})
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.society_profile, response.context['societies'])
+
+    def test_search_users_combined(self):
+        response = self.client.get(reverse('search_users'), {
+            'school': 'Test University',
+            'society_name': 'Tech Society'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.student1_profile, response.context['students'])
+        self.assertIn(self.society_profile, response.context['societies'])
+
+    def test_search_users_student_by_username_and_name(self):
+        self.student1_profile.full_name = "Test Student"
+        self.student1_profile.save()
+
+        response = self.client.get(reverse('search_users'), {
+            'username': 'student1',
+            'name': 'Test Student'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.student1_profile, response.context['students'])
+        self.assertTrue(response.context['show_results'])
+
+    def test_search_users_student_by_course_and_skills(self):
+        self.student1_profile.course = "CS"
+        self.student1_profile.skills = "Python"
+        self.student1_profile.save()
+
+        response = self.client.get(reverse('search_users'), {
+            'course': 'CS',
+            'skills': 'Python'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.student1_profile, response.context['students'])
+        self.assertTrue(response.context['show_results'])
+
+    def test_search_users_society_by_username_and_description(self):
+        self.society_profile.description = "A tech group"
+        self.society_profile.save()
+
+        response = self.client.get(reverse('search_users'), {
+            'username': 'society1',
+            'description': 'A tech group'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(self.society_profile, response.context['societies'])
+        self.assertTrue(response.context['show_results'])
+
 
     # Social Features
     def test_get_comments(self):
@@ -646,6 +798,40 @@ class ViewTests(TestCase):
 
 
     # friend request
+    def test_get_friends(self):
+        FriendRequest.objects.create(from_user=self.test_user1, to_user=self.friend_user, status='accepted')
+        FriendRequest.objects.create(from_user=self.student2_user, to_user=self.test_user1, status='accepted')
+        FriendRequest.objects.create(from_user=self.test_user1, to_user=self.test_user2, status='declined')
+
+        friends = get_friends(self.test_user1)
+        friend_usernames = [user.username for user in friends]
+
+        self.assertIn('frienduser', friend_usernames)
+        self.assertIn('student2', friend_usernames)
+        self.assertNotIn('testuser2', friend_usernames)
+        self.assertEqual(len(friend_usernames), 2)
+
+    def test_send_friend_request_already_exists(self):
+        self.client.login(username='testuser', password='testpass')
+        FriendRequest.objects.create(from_user=self.test_user1, to_user=self.test_user2)
+
+        response = self.client.post(
+            reverse('send_friend_request', args=[self.test_user2.id])
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(response.content, {"message": "Friend request already exists"})
+
+    def test_send_friend_request_to_self(self):
+        self.client.login(username='testuser', password='testpass')
+
+        response = self.client.post(
+            reverse('send_friend_request', args=[self.test_user1.id])
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertJSONEqual(response.content, {"error": "Cannot send request to yourself"})
+
     def test_send_friend_request(self):
         self.client.login(username='testuser', password='testpass')
         response = self.client.post(
