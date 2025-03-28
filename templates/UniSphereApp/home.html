@@ -16,11 +16,23 @@
         <!-- Post Header -->
         <div class="post-header d-flex align-items-center mb-2">
             <div class="profile-pic-wrapper">
-                <img src="{% if post.user.studentprofile.profile_picture %}{{ post.user.studentprofile.profile_picture.url }}{% else %}{% static 'images/default_pfp.jpeg' %}{% endif %}"
-                     alt="Profile Picture"
-                     class="profile-pic"
-                     style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
-            </div>
+    {% if post.user.role == 'student' and post.user.studentprofile.profile_picture %}
+        <img src="{{ post.user.studentprofile.profile_picture.url }}"
+             alt="Student Picture"
+             class="profile-pic"
+             style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
+    {% elif post.user.role == 'society' and post.user.societyprofile.logo %}
+        <img src="{{ post.user.societyprofile.logo.url }}"
+             alt="Society Logo"
+             class="profile-pic"
+             style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
+    {% else %}
+        <img src="{% static 'images/default_pfp.jpeg' %}"
+             alt="Default Picture"
+             class="profile-pic"
+             style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
+    {% endif %}
+</div>
             <div class="ms-2">
                 <div class="d-flex align-items-baseline">
                     <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset me-1">
