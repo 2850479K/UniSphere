@@ -15,7 +15,7 @@ def home(request):
         return redirect('welcomepage')
 
     posts = StudentPost.objects.filter(
-        Q(user__role='society') | 
+        Q(user__role='society') |
         Q(user__role='student', user__studentprofile__visibility='public')
     ).order_by('-timestamp')
 
@@ -36,9 +36,9 @@ def register(request):
             user.role = form.cleaned_data['role']
             user.save()
 
-            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])  
+            user = authenticate(username=form.cleaned_data['username'], password=form.cleaned_data['password1'])
             if user is not None:
-                login(request, user)  
+                login(request, user)
                 return redirect('create_profile')
     else:
         form = UserRegisterForm()
@@ -53,12 +53,12 @@ def custom_login(request):
 
         if user is not None:
             login(request, user)
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"message": "Login successful!", "redirect": "my_profile"}, status=200)
             messages.success(request, "You have successfully logged in.")
             return redirect('my_profile')
         else:
-            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':  
+            if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
                 return JsonResponse({"error": "Invalid username or password."}, status=400)
             messages.error(request, "Invalid username or password.")
 
@@ -134,11 +134,11 @@ def profile(request, username):
                 elif FriendRequest.objects.filter(
                     from_user=request.user,
                     to_user=profile_user,
-                    status='pending' 
+                    status='pending'
                 ).exists():
                     friend_request_sent = True
             except StudentProfile.DoesNotExist:
-                pass  
+                pass
 
         if profile.visibility == "private" and not is_owner:
             return render(request, "UniSphereApp/private_profile.html", {"profile": profile})
@@ -198,7 +198,7 @@ def remove_friend(request, user_id):
         except Exception as e:
             messages.error(request, "Something went wrong while removing the friend.")
 
-        return redirect('friend_requests', username=request.user.username) 
+        return redirect('friend_requests', username=request.user.username)
 
     return redirect('friend_requests', username=request.user.username)
 
@@ -213,8 +213,8 @@ def edit_profile(request):
     if request.method == 'POST':
         form = StudentProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():
-            if request.POST.get("delete_picture"):  
-                profile.profile_picture.delete()  
+            if request.POST.get("delete_picture"):
+                profile.profile_picture.delete()
             form.save()
             messages.success(request, "Profile updated successfully!")
             return redirect('profile', username=request.user.username)
@@ -352,6 +352,7 @@ def edit_post(request, post_id):
                 return redirect('profile', username=post.user.username)
         else:
             messages.error(request, "Error updating post. Please check the form.")
+            existing_files = PostFile.objects.filter(post=post)
     else:
         form = StudentPostForm(instance=post)
         existing_files = PostFile.objects.filter(post=post)
@@ -420,7 +421,7 @@ def search_users(request):
         if skills:
             student_filters &= Q(skills=skills)
 
-        if student_filters:  
+        if student_filters:
             students = StudentProfile.objects.filter(student_filters)
 
         society_filters = Q()
@@ -448,7 +449,7 @@ def search_users(request):
 @login_required
 def get_comments(request, post_id):
     post = get_object_or_404(StudentPost, id=post_id)
-    comments = post.comments.order_by('-created_at')[:5]  
+    comments = post.comments.order_by('-created_at')[:5]
     comments_data = [
         {"username": c.user.username, "content": c.content, "created_at": c.created_at.strftime('%Y-%m-%d %H:%M')}
         for c in comments
@@ -456,8 +457,8 @@ def get_comments(request, post_id):
     return JsonResponse({"comments": comments_data})
 
 def get_friends(user):
-    sent = FriendRequest.objects.filter(from_user=user, accepted=True).values_list('to_user', flat=True)
-    received = FriendRequest.objects.filter(to_user=user, accepted=True).values_list('from_user', flat=True)
+    sent = FriendRequest.objects.filter(from_user=user, status=FriendRequest.ACCEPTED).values_list('to_user', flat=True)
+    received = FriendRequest.objects.filter(to_user=user, status=FriendRequest.ACCEPTED).values_list('from_user', flat=True)
     friend_ids = list(sent) + list(received)
     return User.objects.filter(id__in=friend_ids)
 
@@ -603,14 +604,14 @@ def edit_society_profile(request):
 @login_required
 def contact_profile(request, user_id):
     user = get_object_or_404(User, id=user_id)
-    
+
     if user.role == 'student':
         profile = get_object_or_404(StudentProfile, user=user)
-        email = profile.user.email  
+        email = profile.user.email
     elif user.role == 'society':
         profile = get_object_or_404(SocietyProfile, user=user)
-        email = profile.contact_email 
-    
+        email = profile.contact_email
+
     return render(request, 'UniSphereApp/contact_email.html', {'email': email})
 
 def society_members(request, society_username):
@@ -651,7 +652,7 @@ def society_members(request, society_username):
         'members': members,
         'is_member': is_member,
     })
-    
+
 
 
 def joined_societies(request, username):
