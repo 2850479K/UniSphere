@@ -4,9 +4,9 @@
 {% block title %}Welcome - UniSphere{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'admin/css/welcome.css' %}">
+<link rel="stylesheet" href="{% static 'css/welcome.css' %}">
 <div class="container mt-5">
-    <div class="row">
+    <div class="row align-items-center" style="min-height: 75vh;">
         <div class="col-md-6">
     <h2>Welcome To UniSphere</h2>
     <div class="d-flex justify-content-left gap-5 mt-5">
@@ -35,21 +35,30 @@
     <div class="card mb-4 post-card">
         {% if post.files.all %}
             {% for file in post.files.all|slice:":1" %}
-                {% with file_url=file.file.url|lower %}
-    {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
-        <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
-    {% elif ".mp4" in file_url or ".mov" in file_url or ".webm" in file_url %}
-        <video controls class="card-img-top" style="height: 180px; object-fit: cover;">
-            <source src="{{ file.file.url }}">
-            Your browser does not support the video tag.
-        </video>
-    {% elif ".pdf" in file_url or ".docx" in file_url or ".doc" in file_url %}
-        <div class="p-2">
-            <a href="{{ file.file.url }}" target="_blank" class="btn btn-outline-primary">📄 View Document</a>
-        </div>
-    {% endif %}
-{% endwith %}
-            {% endfor %}
+    {% with file_url=file.file.url|lower %}
+        {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
+            <img src="{{ file.file.url }}" class="card-img-top" style="height: 180px; object-fit: cover;" alt="Post image">
+
+        {% elif ".mp4" in file_url or ".mov" in file_url or ".webm" in file_url %}
+            <video controls class="card-img-top" style="height: 180px; object-fit: cover;">
+                <source src="{{ file.file.url }}">
+                Your browser does not support the video tag.
+            </video>
+
+        {% elif ".pdf" in file_url %}
+            <div class="pdf-preview-container">
+        <iframe src="{{ file.file.url }}" class="w-100" style="height: 180px; border: none;"></iframe>
+    </div>
+
+        {% elif ".doc" in file_url or ".docx" in file_url %}
+            <div class="p-2">
+                <a href="{{ file.file.url }}" target="_blank" class="btn btn-outline-primary">
+                    📄 View Document
+                </a>
+            </div>
+        {% endif %}
+    {% endwith %}
+{% endfor %}
         {% endif %}
 
         <div class="card-body">

@@ -5,7 +5,6 @@
 
 {% block content %}
 <div class="container my-4 feed-container">
-    <!-- Create Post Button for logged-in users (profile posts) -->
     {% if request.user.is_authenticated %}
     <div class="mb-3">
         <a href="{% url 'create_profile_post' %}" class="btn btn-success">Create Post</a>
@@ -23,54 +22,65 @@
                      style="width:40px; height:40px; object-fit:cover; border-radius:50%;">
             </div>
             <div class="ms-2">
-               <div class="d-flex align-items-baseline">
-    <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset me-1">
-        {{ post.user.username }}
-    </a>
-    {% if post.user.role == 'student' %}
-        <span class="badge badge-role badge-student align-middle">Student</span>
-    {% elif post.user.role == 'society' %}
-        <span class="badge badge-role badge-society align-middle">Society</span>
-    {% endif %}
-</div>
+                <div class="d-flex align-items-baseline">
+                    <a href="{% url 'profile' post.user.username %}" class="fw-bold text-decoration-none text-reset me-1">
+                        {{ post.user.username }}
+                    </a>
+                    {% if post.user.role == 'student' %}
+                        <span class="badge badge-role badge-student align-middle">Student</span>
+                    {% elif post.user.role == 'society' %}
+                        <span class="badge badge-role badge-society align-middle">Society</span>
+                    {% endif %}
+                </div>
                 <small class="text-muted">{{ post.timestamp|date:"M j, Y" }}</small>
             </div>
         </div>
 
-        <!-- Post Thumbnail (if available) -->
+        <!-- Post Media -->
         {% if post.files.all %}
-    <div class="post-thumbnail mb-2">
-        {% for file in post.files.all|slice:":1" %}
-            {% with file_url=file.file.url|lower %}
-                {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
-                    <a href="{% url 'view_post' post.id %}">
-                        <img src="{{ file.file.url }}" alt="Post Image" style="width:100%; max-height:200px; object-fit:cover;">
-                    </a>
-                {% elif ".mp4" in file_url or ".mov" in file_url or ".webm" in file_url %}
-                    <video controls style="width:100%; max-height:240px; object-fit:cover;">
-                        <source src="{{ file.file.url }}">
-                        Your browser does not support the video tag.
-                    </video>
-                {% elif ".pdf" in file_url %}
-                    <iframe src="{{ file.file.url }}" width="100%" height="300px" style="border: none;"></iframe>
-                {% elif ".docx" in file_url or ".doc" in file_url %}
-                    <a href="{{ file.file.url }}" target="_blank" class="btn btn-outline-primary">📄 View Document</a>
-                {% endif %}
-            {% endwith %}
-        {% endfor %}
-    </div>
-{% endif %}
+        <div class="post-thumbnail mb-2">
+            {% for file in post.files.all|slice:":1" %}
+                {% with file_url=file.file.url|lower %}
+                    {% if ".jpg" in file_url or ".jpeg" in file_url or ".png" in file_url or ".gif" in file_url %}
+                        <a href="{% url 'view_post' post.id %}">
+                            <img src="{{ file.file.url }}" alt="Post Image" style="width:100%; max-height:200px; object-fit:cover;">
+                        </a>
+                    {% elif ".mp4" in file_url or ".mov" in file_url or ".webm" in file_url %}
+                        <video controls style="width:100%; max-height:240px; object-fit:cover;">
+                            <source src="{{ file.file.url }}">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% elif ".pdf" in file_url %}
+                        <iframe src="{{ file.file.url }}" width="100%" height="300px" style="border: none;"></iframe>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        </div>
+        {% endif %}
 
         <!-- Post Body -->
         <div class="post-body">
-            <p class="post-caption">
+            <p class="post-caption mb-2">
                 <a href="{% url 'profile' post.user.username %}" class="fw-semibold text-decoration-none text-reset">
                     {{ post.user.username }}
                 </a>
                 {{ post.caption }}
             </p>
-            <div class="d-flex align-items-center gap-3">
-                <!-- AJAX-Enabled Like Button -->
+
+            <!-- Preview Comments -->
+            {% if post.comments.all %}
+            <div class="comment-preview mt-2 mb-2">
+                {% for comment in post.comments.all|slice:":2" %}
+                    <div class="mb-1">
+                        <strong>{{ comment.user.username }}</strong>: {{ comment.content }}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Social Buttons -->
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <!-- Like -->
                 <button type="button"
                         class="like-button btn border-0 bg-transparent p-0 d-flex align-items-center"
                         data-post-id="{{ post.id }}">
@@ -82,10 +92,10 @@
                     <span class="like-count">({{ post.likes.count }})</span>
                 </button>
 
-                <!-- Comment Button -->
+                <!-- Comment -->
                 <a href="{% url 'view_post' post.id %}" class="btn btn-sm btn-outline-secondary">Comment</a>
 
-                <!-- Repost Button -->
+                <!-- Repost -->
                 <form method="POST" action="{% url 'share_post' post.id %}">
                     {% csrf_token %}
                     <button type="submit" class="btn btn-sm btn-outline-secondary">Repost</button>

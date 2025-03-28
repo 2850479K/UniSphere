@@ -252,3 +252,17 @@ footer a:hover {
   background-color: #75c798; /* Soft green */
   color: white;
 }
+
+.comment-preview {
+    font-size: 12.8px;
+    color: #888;
+    padding-left: 4px;
+    line-height: 1.25;
+    margin-top: 6px;
+}
+
+.comment-preview strong {
+    color: #555;
+    font-weight: 600;
+    font-size: 13px;
+}
